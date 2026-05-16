@@ -6,10 +6,12 @@ const WebSocket = require('ws');
 const app = express();
 app.use(bodyParser.json());
 
+const url = process.env.GAME_URL || 'ws://game-service:3000';
+
 // Simple endpoint to 'play' which charges the user 10 units
 async function playForUser(userId) {
   if (!userId) throw new Error('userId required');
-  const resp = await fetch(`http://wallet-service:4000/adjust`, {
+  const resp = await fetch(`${url}/adjust`, {
     method: 'POST',
     body: JSON.stringify({ userId, amount: -10 }),
     headers: { 'Content-Type': 'application/json' }
