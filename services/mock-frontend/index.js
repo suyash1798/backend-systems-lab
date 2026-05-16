@@ -6,7 +6,7 @@ const userId = process.env.USER_ID || 'user-1';
 function connect() {
 
   console.log(process.memoryUsage())
-  for(let i = 0; i < 10; i++){
+  for(let i = 0; i < 100; i++){
     new WebSocket(wsUrl)
   }
   console.log(process.memoryUsage())
