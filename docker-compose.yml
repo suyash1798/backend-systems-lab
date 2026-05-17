@@ -19,6 +19,8 @@ services:
     build: ./services/game-service
     ports:
       - "3000:3000"
+    environment:
+      - WALLET_URL=http://wallet-service:4000
     depends_on:
       - wallet-service
     restart: unless-stopped
@@ -31,6 +33,20 @@ services:
     depends_on:
       - game-service
     restart: unless-stopped
+
+  ws-load-tester:
+    build: ./services/ws-load-tester
+    environment:
+      - TARGET_URL=ws://game-service:3000
+      - ACTION=ping
+      - CONNECTIONS=10000
+      - RAMP_UP_MS=10000
+      - DURATION_MS=60000
+      - MESSAGE_INTERVAL_MS=1000
+    depends_on:
+      - game-service
+    profiles:
+      - loadtest
 
 volumes:
   redis-data:

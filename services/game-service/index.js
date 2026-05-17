@@ -1,17 +1,17 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const fetch = require('node-fetch');
-const WebSocket = require('ws');
+const GameSocketServer = require('./GameSocketServer');
 
 const app = express();
 app.use(bodyParser.json());
 
-const url = process.env.GAME_URL || 'ws://game-service:3000';
+const walletUrl = process.env.WALLET_URL || 'http://wallet-service:4000';
 
 // Simple endpoint to 'play' which charges the user 10 units
 async function playForUser(userId) {
   if (!userId) throw new Error('userId required');
-  const resp = await fetch(`${url}/adjust`, {
+  const resp = await fetch(`${walletUrl}/adjust`, {
     method: 'POST',
     body: JSON.stringify({ userId, amount: -10 }),
     headers: { 'Content-Type': 'application/json' }
@@ -24,6 +24,10 @@ async function playForUser(userId) {
   }
   return resp.json();
 }
+
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'game-service' });
+});
 
 app.post('/play', async (req, res) => {
   const { userId } = req.body;
@@ -39,27 +43,12 @@ app.post('/play', async (req, res) => {
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => console.log(`game-service listening on ${port}`));
 
-// WebSocket server attached to the same HTTP server
-const wss = new WebSocket.Server({ server });
+const HEARTBEAT_INTERVAL_MS = Number(process.env.WS_HEARTBEAT_INTERVAL_MS) || 30000;
 
-wss.on('connection', (ws) => {
-  console.log('ws: client connected');
-  ws.on('message', async (msg) => {
-    try {
-      const p = JSON.parse(msg);
-      if (p.action === 'play' && p.userId) {
-        try {
-          const data = await playForUser(p.userId);
-          ws.send(JSON.stringify({ status: 'ok', balance: data.balance }));
-        } catch (err) {
-          ws.send(JSON.stringify({ status: 'error', error: err.message, detail: err.detail || null }));
-        }
-      } else {
-        ws.send(JSON.stringify({ status: 'error', error: 'invalid message' }));
-      }
-    } catch (err) {
-      ws.send(JSON.stringify({ status: 'error', error: 'invalid json' }));
-    }
-  });
+const gameSocketServer = new GameSocketServer({
+  server,
+  heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
+  playHandler: playForUser
 });
 
+gameSocketServer.start();

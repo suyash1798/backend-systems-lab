@@ -1,34 +1,19 @@
-const WebSocket = require('ws');
+const GameWebSocketClient = require('./GameWebSocketClient');
 
 const wsUrl = process.env.GAME_URL || 'ws://game-service:3000';
 const userId = process.env.USER_ID || 'user-1';
+const HEARTBEAT_INTERVAL_MS = Number(process.env.WS_HEARTBEAT_INTERVAL_MS) || 30000;
+const HEARTBEAT_GRACE_MS = Number(process.env.WS_HEARTBEAT_GRACE_MS) || 5000;
+const PLAY_INTERVAL_MS = Number(process.env.PLAY_INTERVAL_MS) || 5000;
+const RECONNECT_DELAY_MS = Number(process.env.WS_RECONNECT_DELAY_MS) || 2000;
 
-function connect() {
+const client = new GameWebSocketClient({
+  wsUrl,
+  userId,
+  heartbeatIntervalMs: HEARTBEAT_INTERVAL_MS,
+  heartbeatGraceMs: HEARTBEAT_GRACE_MS,
+  playIntervalMs: PLAY_INTERVAL_MS,
+  reconnectDelayMs: RECONNECT_DELAY_MS
+});
 
-  console.log(process.memoryUsage())
-  for(let i = 0; i < 100; i++){
-    new WebSocket(wsUrl)
-  }
-  console.log(process.memoryUsage())
-  const ws = new WebSocket(wsUrl);
-  console.log(wsUrl, process.env.GAME_URL)
-
-  ws.on('open', () => {
-    console.log('connected to game-service via websocket');
-    // send a play every 5 seconds
-    setInterval(() => {
-      const msg = JSON.stringify({ action: 'play', userId });
-      console.log('sending', msg);
-      ws.send(msg);
-    }, 5000);
-  });
-
-  ws.on('message', (m) => console.log('recv', m.toString()));
-  ws.on('close', () => {
-    console.log('ws closed, reconnecting in 2s');
-    setTimeout(connect, 2000);
-  });
-  ws.on('error', (e) => console.error('ws error', e.message));
-}
-
-connect();
+client.connect();
