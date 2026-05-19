@@ -1,0 +1,15 @@
+# The manifest for the "redis" service.
+name: redis
+type: Backend Service
+
+image:
+  location: redis:7.2
+  port: 6379
+
+cpu: 256
+memory: 512
+platform: linux/x86_64
+count: 1
+exec: true
+network:
+  connect: true

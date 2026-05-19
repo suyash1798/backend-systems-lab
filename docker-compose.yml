@@ -21,8 +21,11 @@ services:
       - "3000:3000"
     environment:
       - WALLET_URL=http://wallet-service:4000
+      - REDIS_URL=redis://redis:6379
+      - REDIS_CHANNEL=game-events
     depends_on:
       - wallet-service
+      - redis
     restart: unless-stopped
 
   mock-frontend:
@@ -30,6 +33,7 @@ services:
     environment:
       - GAME_URL=ws://game-service:3000
       - USER_ID=user-1
+      - ROOM_ID=room-1
     depends_on:
       - game-service
     restart: unless-stopped
@@ -39,10 +43,11 @@ services:
     environment:
       - TARGET_URL=ws://game-service:3000
       - ACTION=ping
-      - CONNECTIONS=10000
+      - CONNECTIONS=100
       - RAMP_UP_MS=10000
       - DURATION_MS=60000
       - MESSAGE_INTERVAL_MS=1000
+      - REQUEST_TIMEOUT_MS=5000
     depends_on:
       - game-service
     profiles:

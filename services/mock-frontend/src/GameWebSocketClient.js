@@ -1,9 +1,10 @@
 const WebSocket = require('ws');
 
 class GameWebSocketClient {
-  constructor({ wsUrl, userId, heartbeatIntervalMs, heartbeatGraceMs, playIntervalMs, reconnectDelayMs }) {
+  constructor({ wsUrl, userId, roomId, heartbeatIntervalMs, heartbeatGraceMs, playIntervalMs, reconnectDelayMs }) {
     this.wsUrl = wsUrl;
     this.userId = userId;
+    this.roomId = roomId;
     this.heartbeatIntervalMs = heartbeatIntervalMs;
     this.heartbeatGraceMs = heartbeatGraceMs;
     this.playIntervalMs = playIntervalMs;
@@ -27,6 +28,7 @@ class GameWebSocketClient {
   handleOpen() {
     console.log('connected to game-service via websocket');
     this.resetHeartbeatTimeout();
+    this.joinRoom();
     this.startPlaying();
   }
 
@@ -48,8 +50,24 @@ class GameWebSocketClient {
     this.playInterval = setInterval(() => this.sendPlayMessage(), this.playIntervalMs);
   }
 
+  joinRoom() {
+    this.send({
+      action: 'join',
+      userId: this.userId,
+      roomId: this.roomId
+    });
+  }
+
   sendPlayMessage() {
-    const message = JSON.stringify({ action: 'play', userId: this.userId });
+    this.send({
+      action: 'play',
+      userId: this.userId,
+      roomId: this.roomId
+    });
+  }
+
+  send(payload) {
+    const message = JSON.stringify(payload);
     console.log('sending', message);
 
     if (this.ws.readyState === WebSocket.OPEN) {

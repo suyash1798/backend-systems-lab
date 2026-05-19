@@ -1,22 +1,40 @@
 const WebSocket = require('ws');
+const crypto = require('crypto');
+const MessageRouter = require('./messageRouter');
+const RoomNotifier = require('./roomNotifier');
 
 class GameSocketServer {
-  constructor({ server, heartbeatIntervalMs, playHandler }) {
+  constructor({ server, heartbeatIntervalMs, playHandler, eventBus }) {
     this.wss = new WebSocket.Server({ server });
     this.heartbeatIntervalMs = heartbeatIntervalMs;
-    this.playHandler = playHandler;
+    this.eventBus = eventBus;
     this.heartbeatInterval = null;
+    this.roomNotifier = new RoomNotifier({
+      clients: this.wss.clients,
+      send: (ws, payload) => this.send(ws, payload)
+    });
+    this.messageRouter = new MessageRouter({
+      playHandler,
+      eventBus,
+      roomNotifier: this.roomNotifier
+    });
   }
 
-  start() {
+  async start() {
+    this.eventBus.subscribe((event) => this.roomNotifier.notifyRoom(event));
+    await this.eventBus.start();
+
     this.wss.on('connection', (ws) => this.handleConnection(ws));
-    this.wss.on('close', () => this.stopHeartbeat());
+    this.wss.on('close', () => this.stop());
     this.startHeartbeat();
   }
 
   handleConnection(ws) {
     console.log('ws: client connected');
+    ws.id = crypto.randomUUID();
     ws.isAlive = true;
+    ws.roomId = null;
+    ws.userId = null;
 
     ws.on('pong', () => {
       ws.isAlive = true;
@@ -26,31 +44,7 @@ class GameSocketServer {
   }
 
   async handleMessage(ws, msg) {
-    try {
-      const payload = JSON.parse(msg);
-
-      if (payload.action === 'ping') {
-        return this.send(ws, { status: 'ok', action: 'pong', requestId: payload.requestId || null });
-      }
-
-      if (payload.action !== 'play' || !payload.userId) {
-        return this.send(ws, { status: 'error', error: 'invalid message', requestId: payload.requestId || null });
-      }
-
-      try {
-        const data = await this.playHandler(payload.userId);
-        this.send(ws, { status: 'ok', balance: data.balance, requestId: payload.requestId || null });
-      } catch (err) {
-        this.send(ws, {
-          status: 'error',
-          error: err.message,
-          detail: err.detail || null,
-          requestId: payload.requestId || null
-        });
-      }
-    } catch (err) {
-      this.send(ws, { status: 'error', error: 'invalid json' });
-    }
+    return await this.messageRouter.handleMessage(ws, msg, (client, payload) => this.send(client, payload));
   }
 
   send(ws, payload) {
@@ -80,8 +74,9 @@ class GameSocketServer {
     ws.ping();
   }
 
-  stopHeartbeat() {
+  async stop() {
     clearInterval(this.heartbeatInterval);
+    await this.eventBus.stop();
   }
 }
 

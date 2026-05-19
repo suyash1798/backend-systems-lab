@@ -37,6 +37,8 @@ network:
 variables:                    # Pass environment variables as key value pairs.
   LOG_LEVEL: info
   WALLET_URL: http://wallet-service:4000
+  REDIS_URL: redis://redis:6379
+  REDIS_CHANNEL: game-events
   WS_HEARTBEAT_INTERVAL_MS: 30000   
 
 #secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store.

@@ -8,7 +8,7 @@ image:
 cpu: 512
 memory: 1024
 platform: linux/x86_64
-count: 1
+count: 0
 exec: true
 network:
   connect: true
@@ -18,6 +18,6 @@ variables:
   ACTION: ping
   CONNECTIONS: 1000
   RAMP_UP_MS: 60000
-  DURATION_MS: 0
+  DURATION_MS: 60000
   MESSAGE_INTERVAL_MS: 1000
   REQUEST_TIMEOUT_MS: 5000
