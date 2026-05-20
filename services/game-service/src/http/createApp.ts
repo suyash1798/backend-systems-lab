@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express';
 
 function createApp() {
   const app = express();
@@ -10,4 +10,4 @@ function createApp() {
   return app;
 }
 
-module.exports = createApp;
+export default createApp;

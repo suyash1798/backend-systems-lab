@@ -1,11 +1,14 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
+import { WalletAdjustResponse, WalletError } from '../types/wallet';
 
 class WalletClient {
-  constructor({ baseUrl }) {
+  private readonly baseUrl: string;
+
+  constructor({ baseUrl }: { baseUrl: string }) {
     this.baseUrl = baseUrl;
   }
 
-  async playForUser(userId) {
+  async playForUser(userId: string): Promise<WalletAdjustResponse> {
     if (!userId) {
       throw new Error('userId required');
     }
@@ -18,13 +21,13 @@ class WalletClient {
 
     if (!resp.ok) {
       const detail = await resp.json().catch(() => ({ error: 'wallet error' }));
-      const err = new Error('wallet service error');
+      const err = new Error('wallet service error') as WalletError;
       err.detail = detail;
       throw err;
     }
 
-    return resp.json();
+    return resp.json() as Promise<WalletAdjustResponse>;
   }
 }
 
-module.exports = WalletClient;
+export default WalletClient;

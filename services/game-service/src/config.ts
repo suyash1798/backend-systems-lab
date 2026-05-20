@@ -1,9 +1,9 @@
-function numberFromEnv(name, fallback) {
+function numberFromEnv(name: string, fallback: number): number {
   const value = Number(process.env[name]);
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
-module.exports = {
+export default {
   port: numberFromEnv('PORT', 3000),
   walletUrl: process.env.WALLET_URL || 'http://wallet-service:4000',
   heartbeatIntervalMs: numberFromEnv('WS_HEARTBEAT_INTERVAL_MS', 30000),

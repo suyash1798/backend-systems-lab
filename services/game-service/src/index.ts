@@ -1,9 +1,9 @@
-const config = require('./src/config');
-const createApp = require('./src/http/createApp');
-const WalletClient = require('./src/services/walletClient');
-const EventBus = require('./src/events/eventBus');
-const GameSocketServer = require('./src/websocket/GameSocketServer');
-const RedisPubSub = require('./src/infra/redisPubSub');
+import config from './config';
+import createApp from './http/createApp';
+import WalletClient from './services/walletClient';
+import EventBus from './events/eventBus';
+import GameSocketServer from './websocket/GameSocketServer';
+import RedisPubSub from './infra/redisPubSub';
 
 const walletClient = new WalletClient({ baseUrl: config.walletUrl });
 const app = createApp();
