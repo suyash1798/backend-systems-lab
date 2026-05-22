@@ -4,13 +4,13 @@ import { WalletAdjustResponse, WalletError } from '../types/wallet';
 class WalletClient {
   private readonly baseUrl: string;
 
-  constructor({ baseUrl }: { baseUrl: string }) {
+  constructor(baseUrl: string ) {
     this.baseUrl = baseUrl;
   }
 
   async playForUser(userId: string): Promise<WalletAdjustResponse> {
     if (!userId) {
-      throw new Error('userId required');
+        throw new Error('userId required');
     }
 
     const resp = await fetch(`${this.baseUrl}/adjust`, {

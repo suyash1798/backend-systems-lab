@@ -1,54 +1,43 @@
 import { randomUUID } from 'crypto';
 import { Server as HttpServer } from 'http';
-import { RawData, WebSocket, WebSocketServer } from 'ws';
-import EventBus from '../events/eventBus';
-import { WalletAdjustResponse } from '../types/wallet';
-import { GameSocket, OutgoingPayload } from '../types/websocket';
-import MessageRouter from './messageRouter';
-import RoomNotifier from './roomNotifier';
-
-type PlayHandler = (userId: string) => Promise<WalletAdjustResponse>;
+import { RawData, WebSocketServer } from 'ws';
+import RedisPubSub from '../infra/redisPubSub';
+import { PlayerEvent } from '../types/events';
+import { GameSocket, IncomingMessagePayload } from '../types/websocket';
+import GameActions, { PlayHandler } from './gameActions';
+import Heartbeat from './Heartbeat';
 
 class GameSocketServer {
   private readonly wss: WebSocketServer;
-  private readonly heartbeatIntervalMs: number;
-  private readonly eventBus: EventBus;
-  private readonly roomNotifier: RoomNotifier;
-  private readonly messageRouter: MessageRouter;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private readonly heartbeat: Heartbeat;
+  private readonly actions: GameActions;
+  private readonly pubSub: RedisPubSub;
 
   constructor({
     server,
     heartbeatIntervalMs,
     playHandler,
-    eventBus
+    pubSub,
+    serverId
   }: {
     server: HttpServer;
     heartbeatIntervalMs: number;
     playHandler: PlayHandler;
-    eventBus: EventBus;
+    pubSub: RedisPubSub;
+    serverId: string;
   }) {
     this.wss = new WebSocketServer({ server });
-    this.heartbeatIntervalMs = heartbeatIntervalMs;
-    this.eventBus = eventBus;
-    this.roomNotifier = new RoomNotifier({
-      clients: this.wss.clients,
-      send: (ws, payload) => this.send(ws, payload)
-    });
-    this.messageRouter = new MessageRouter({
-      playHandler,
-      eventBus,
-      roomNotifier: this.roomNotifier
-    });
+    this.heartbeat = new Heartbeat(this.wss, heartbeatIntervalMs);
+    this.pubSub = pubSub;
+    this.actions = new GameActions(playHandler, pubSub, serverId);
   }
 
-  async start(): Promise<void> {
-    this.eventBus.subscribe((event) => this.roomNotifier.notifyRoom(event));
-    await this.eventBus.start();
+  start(): void {
+    this.pubSub.onMessage((event) => this.notifyRoom(event));
 
     this.wss.on('connection', (ws) => this.handleConnection(ws as GameSocket));
     this.wss.on('close', () => this.stop());
-    this.startHeartbeat();
+    this.heartbeat.start();
   }
 
   private handleConnection(ws: GameSocket): void {
@@ -66,42 +55,32 @@ class GameSocketServer {
   }
 
   private async handleMessage(ws: GameSocket, msg: RawData): Promise<void> {
-    await this.messageRouter.handleMessage(ws, Buffer.from(msg as Buffer), (client, payload) => this.send(client, payload));
-  }
+    let payload: IncomingMessagePayload;
 
-  private send(ws: GameSocket, payload: OutgoingPayload): void {
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(payload));
-    }
-  }
-
-  private startHeartbeat(): void {
-    this.heartbeatInterval = setInterval(() => {
-      this.wss.clients.forEach((ws) => this.checkClientHeartbeat(ws as GameSocket));
-    }, this.heartbeatIntervalMs);
-  }
-
-  private checkClientHeartbeat(ws: GameSocket): void {
-    if (ws.readyState !== WebSocket.OPEN) {
+    try {
+      payload = JSON.parse(msg.toString());
+    } catch (err) {
+      ws.send(JSON.stringify({ status: 'error', error: 'invalid json' }));
       return;
     }
 
-    if (ws.isAlive === false) {
-      console.log('ws: terminating stale client');
-      ws.terminate();
-      return;
-    }
-
-    ws.isAlive = false;
-    ws.ping();
+    await this.actions.handle(ws, payload);
   }
 
-  async stop(): Promise<void> {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval);
-    }
+  private notifyRoom(event: PlayerEvent): void {
+    this.wss.clients.forEach((client) => {
+      const gameClient = client as GameSocket;
 
-    await this.eventBus.stop();
+      if (gameClient.roomId !== event.roomId || gameClient.id === event.sourceConnectionId) {
+        return;
+      }
+
+      gameClient.send(JSON.stringify({ type: 'notification', event }));
+    });
+  }
+
+  stop(): void {
+    this.heartbeat.stop();
   }
 }
 

@@ -44,10 +44,13 @@ services:
       - TARGET_URL=ws://game-service:3000
       - ACTION=ping
       - CONNECTIONS=100
+      - ROOMS=1
       - RAMP_UP_MS=10000
       - DURATION_MS=60000
       - MESSAGE_INTERVAL_MS=1000
+      - LOG_INTERVAL_MS=5000
       - REQUEST_TIMEOUT_MS=5000
+      - JOIN_ON_OPEN=false
     depends_on:
       - game-service
     profiles:

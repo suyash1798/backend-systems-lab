@@ -1,24 +1,29 @@
 import { createClient, RedisClientType } from 'redis';
-import { EventHandler, PlayerEvent, PubSubTransport } from '../types/events';
+import { EventHandler, PlayerEvent } from '../types/events';
 
-class RedisPubSub implements PubSubTransport {
+class RedisPubSub {
   private readonly channel: string;
   private readonly publisher: RedisClientType;
   private readonly subscriber: RedisClientType;
+  private messageHandler: EventHandler = () => {};
 
-  constructor({ url, channel }: { url: string; channel: string }) {
+  constructor(url: string, channel: string) {
     this.channel = channel;
     this.publisher = createClient({ url });
-    this.subscriber = this.publisher.duplicate();
+    this.subscriber = createClient({ url });
   }
 
-  async connect(onMessage: EventHandler): Promise<void> {
+  onMessage(handler: EventHandler): void {
+    this.messageHandler = handler;
+  }
+
+  async connect(): Promise<void> {
     this.publisher.on('error', (err) => console.error('redis publisher error', err.message));
     this.subscriber.on('error', (err) => console.error('redis subscriber error', err.message));
 
     await this.publisher.connect();
     await this.subscriber.connect();
-    await this.subscriber.subscribe(this.channel, (message) => this.handleMessage(message, onMessage));
+    await this.subscriber.subscribe(this.channel, (message) => this.handleMessage(message));
 
     console.log(`redis pubsub connected on ${this.channel}`);
   }
@@ -28,15 +33,15 @@ class RedisPubSub implements PubSubTransport {
   }
 
   async close(): Promise<void> {
-    await Promise.allSettled([
+    await Promise.all([
       this.subscriber.quit(),
       this.publisher.quit()
     ]);
   }
 
-  private handleMessage(message: string, onMessage: EventHandler): void {
+  private handleMessage(message: string): void {
     try {
-      onMessage(JSON.parse(message) as PlayerEvent);
+      this.messageHandler(JSON.parse(message) as PlayerEvent);
     } catch (err) {
       console.error('redis message parse error', (err as Error).message);
     }

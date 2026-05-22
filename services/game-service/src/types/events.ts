@@ -11,9 +11,3 @@ export interface PlayerEvent {
 }
 
 export type EventHandler = (event: PlayerEvent) => void;
-
-export interface PubSubTransport {
-  connect(onMessage: EventHandler): Promise<void>;
-  publish(payload: PlayerEvent): Promise<void>;
-  close(): Promise<void>;
-}
