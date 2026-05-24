@@ -60,9 +60,7 @@ class GameWebSocketClient {
 
   sendPlayMessage() {
     this.send({
-      action: 'play',
-      userId: this.userId,
-      roomId: this.roomId
+      action: 'play'
     });
   }
 

@@ -28,15 +28,15 @@ services:
       - redis
     restart: unless-stopped
 
-  mock-frontend:
-    build: ./services/mock-frontend
-    environment:
-      - GAME_URL=ws://game-service:3000
-      - USER_ID=user-1
-      - ROOM_ID=room-1
-    depends_on:
-      - game-service
-    restart: unless-stopped
+  # mock-frontend:
+  #   build: ./services/mock-frontend
+  #   environment:
+  #     - GAME_URL=ws://game-service:3000
+  #     - USER_ID=user-1
+  #     - ROOM_ID=room-1
+  #   depends_on:
+  #     - game-service
+  #   restart: unless-stopped
 
   ws-load-tester:
     build: ./services/ws-load-tester

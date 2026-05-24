@@ -8,9 +8,7 @@ function buildJoinPayload(client) {
 
 function buildActionPayload(action, client) {
   return {
-    action,
-    userId: client.userId,
-    roomId: client.roomId
+    action
   };
 }
 

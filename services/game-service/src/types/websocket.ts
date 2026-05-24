@@ -5,6 +5,8 @@ export interface GameSocket extends WebSocket {
   isAlive: boolean;
   roomId: string | null;
   userId: string | null;
+  processedRequests: Map<string, object>;
+  pendingRequests: Set<string>;
 }
 
 export interface IncomingMessagePayload {

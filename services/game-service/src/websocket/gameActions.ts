@@ -1,4 +1,5 @@
 import RedisPubSub from '../infra/redisPubSub';
+import RequestLogger from '../observability/RequestLogger';
 import { WalletAdjustResponse, WalletError } from '../types/wallet';
 import { GameSocket, IncomingMessagePayload } from '../types/websocket';
 
@@ -8,14 +9,40 @@ class GameActions {
   constructor(
     private readonly playHandler: PlayHandler,
     private readonly pubSub: RedisPubSub,
-    private readonly serverId: string
+    private readonly serverId: string,
+    private readonly logger = new RequestLogger()
   ) {}
 
   async handle(ws: GameSocket, payload: IncomingMessagePayload): Promise<void> {
+    const startedAt = Date.now();
     const { userId, roomId, requestId } = payload;
+    const action = payload.action;
+    const trace = {
+      action,
+      requestId,
+      connectionId: ws.id,
+      userId: userId || ws.userId,
+      roomId: roomId || ws.roomId
+    };
 
-    if (payload.action === 'join') {
+    if (requestId && ws.processedRequests.has(requestId)) {
+      const response = ws.processedRequests.get(requestId);
+      this.logger.duplicateCompleted(trace, startedAt);
+      this.send(ws, { ...response, duplicate: true });
+      return;
+    }
+
+    if (requestId && ws.pendingRequests.has(requestId)) {
+      this.logger.duplicatePending(trace, startedAt);
+      this.send(ws, { status: 'pending', duplicate: true, requestId });
+      return;
+    }
+
+    this.logger.started(trace);
+
+    if (action === 'join') {
       if (!userId || !roomId) {
+        this.logger.failed(trace, startedAt, 'userId and roomId required');
         this.send(ws, { status: 'error', error: 'userId and roomId required', requestId });
         return;
       }
@@ -23,7 +50,11 @@ class GameActions {
       ws.userId = userId;
       ws.roomId = roomId;
 
-      this.send(ws, { status: 'ok', action: 'joined', userId, roomId, requestId });
+      const response = { status: 'ok', action: 'joined', userId, roomId, requestId };
+      this.remember(ws, requestId, response);
+      this.send(ws, response);
+      this.logger.completed({ ...trace, userId, roomId }, startedAt);
+
       await this.pubSub.publish({
         type: 'player_joined',
         userId,
@@ -37,28 +68,56 @@ class GameActions {
       return;
     }
 
-    if (payload.action !== 'play') {
+    if (action !== 'play') {
+      this.logger.failed(trace, startedAt, 'invalid message');
       this.send(ws, { status: 'error', error: 'invalid message', requestId });
       return;
     }
 
-    if (!userId) {
-      this.send(ws, { status: 'error', error: 'userId required', requestId });
+    if (!requestId) {
+      this.logger.failed(trace, startedAt, 'requestId required');
+      this.send(ws, { status: 'error', error: 'requestId required' });
       return;
     }
 
-    const playRoomId = roomId || ws.roomId || 'global';
-    ws.userId = userId;
-    ws.roomId = playRoomId;
+    if (!ws.userId || !ws.roomId) {
+      this.logger.failed(trace, startedAt, 'join required');
+      this.send(ws, { status: 'error', error: 'join required', requestId });
+      return;
+    }
+
+    const playUserId = ws.userId;
+    const playRoomId = ws.roomId;
+    ws.pendingRequests.add(requestId);
+
+    let data: WalletAdjustResponse;
 
     try {
-      const data = await this.playHandler(userId);
-      this.send(ws, { status: 'ok', balance: data.balance, requestId });
+      data = await this.playHandler(playUserId);
+    } catch (err) {
+      const walletErr = err as WalletError;
+      this.logger.failed(trace, startedAt, walletErr.message);
+      this.send(ws, {
+        status: 'error',
+        error: walletErr.message,
+        detail: walletErr.detail || null,
+        requestId
+      });
+      ws.pendingRequests.delete(requestId);
+      return;
+    }
 
+    const response = { status: 'ok', balance: data.balance, requestId };
+    this.remember(ws, requestId, response);
+    this.send(ws, response);
+    ws.pendingRequests.delete(requestId);
+    this.logger.completed(trace, startedAt);
+
+    try {
       await this.pubSub.publish({
         type: 'player_action',
         action: 'play',
-        userId,
+        userId: playUserId,
         roomId: playRoomId,
         balance: data.balance,
         requestId,
@@ -67,13 +126,13 @@ class GameActions {
         timestamp: new Date().toISOString()
       });
     } catch (err) {
-      const walletErr = err as WalletError;
-      this.send(ws, {
-        status: 'error',
-        error: walletErr.message,
-        detail: walletErr.detail || null,
-        requestId
-      });
+      this.logger.redisPublishFailed(trace, err as Error);
+    }
+  }
+
+  private remember(ws: GameSocket, requestId: string | null | undefined, response: object): void {
+    if (requestId) {
+      ws.processedRequests.set(requestId, response);
     }
   }
 

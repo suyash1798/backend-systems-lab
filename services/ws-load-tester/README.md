@@ -4,7 +4,7 @@ Run from the repo root.
 
 ## Room Play Load Test
 
-This joins each connection to a room and sends `play` messages with `roomId`.
+This joins each connection to a room, then sends `play` messages with only `requestId`.
 
 ```bash
 docker compose --profile loadtest run --rm --build \
