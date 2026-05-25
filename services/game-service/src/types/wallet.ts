@@ -5,4 +5,6 @@ export interface WalletAdjustResponse {
 
 export interface WalletError extends Error {
   detail?: unknown;
+  status?: number;
+  url?: string;
 }

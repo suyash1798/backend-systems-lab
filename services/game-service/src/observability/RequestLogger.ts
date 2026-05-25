@@ -17,8 +17,8 @@ class RequestLogger {
     this.finished('request_completed', trace, startedAt);
   }
 
-  failed(trace: RequestTrace, startedAt: number, error: string): void {
-    this.finished('request_failed', trace, startedAt, error);
+  failed(trace: RequestTrace, startedAt: number, error: string, detail?: unknown): void {
+    this.finished('request_failed', trace, startedAt, error, detail);
   }
 
   duplicateCompleted(trace: RequestTrace, startedAt: number): void {
@@ -36,11 +36,12 @@ class RequestLogger {
     });
   }
 
-  private finished(event: string, trace: RequestTrace, startedAt: number, error?: string): void {
+  private finished(event: string, trace: RequestTrace, startedAt: number, error?: string, detail?: unknown): void {
     log(event, {
       ...trace,
       latencyMs: Date.now() - startedAt,
-      error
+      error,
+      detail
     });
   }
 }

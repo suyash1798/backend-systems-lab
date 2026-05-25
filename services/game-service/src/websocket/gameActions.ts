@@ -96,7 +96,11 @@ class GameActions {
       data = await this.playHandler(playUserId);
     } catch (err) {
       const walletErr = err as WalletError;
-      this.logger.failed(trace, startedAt, walletErr.message);
+      this.logger.failed(trace, startedAt, walletErr.message, {
+        status: walletErr.status,
+        url: walletErr.url,
+        detail: walletErr.detail
+      });
       this.send(ws, {
         status: 'error',
         error: walletErr.message,

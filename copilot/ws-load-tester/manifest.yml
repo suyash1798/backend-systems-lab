@@ -17,7 +17,7 @@ variables:
   TARGET_URL: ws://game-service:3000
   ACTION: play
   JOIN_ON_OPEN: true
-  CONNECTIONS: 100
+  CONNECTIONS: 500
   ROOMS: 20
   DURATION_MS: 60000
   RAMP_UP_MS: 60000

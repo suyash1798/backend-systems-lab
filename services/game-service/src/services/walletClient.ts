@@ -10,10 +10,11 @@ class WalletClient {
 
   async playForUser(userId: string): Promise<WalletAdjustResponse> {
     if (!userId) {
-        throw new Error('userId required');
+      throw new Error('userId required');
     }
 
-    const resp = await fetch(`${this.baseUrl}/adjust`, {
+    const url = `${this.baseUrl}/adjust`;
+    const resp = await fetch(url, {
       method: 'POST',
       body: JSON.stringify({ userId, amount: -10 }),
       headers: { 'Content-Type': 'application/json' }
@@ -23,6 +24,8 @@ class WalletClient {
       const detail = await resp.json().catch(() => ({ error: 'wallet error' }));
       const err = new Error('wallet service error') as WalletError;
       err.detail = detail;
+      err.status = resp.status;
+      err.url = url;
       throw err;
     }
 

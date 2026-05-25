@@ -1,6 +1,7 @@
-FROM node:20-alpine
+FROM python:3.12-alpine
 WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-RUN npm install --production
 EXPOSE 4000
-CMD ["node", "index.js"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "4000"]
