@@ -8,16 +8,17 @@ image:
 cpu: 512
 memory: 1024
 platform: linux/x86_64
-count: 0
+count: 1
 exec: true
 network:
   connect: true
 
 variables:
   TARGET_URL: ws://game-service:3000
-  ACTION: ping
-  CONNECTIONS: 1000
-  RAMP_UP_MS: 60000
+  ACTION: play
+  JOIN_ON_OPEN: true
+  CONNECTIONS: 100
+  ROOMS: 20
   DURATION_MS: 60000
+  RAMP_UP_MS: 60000
   MESSAGE_INTERVAL_MS: 1000
-  REQUEST_TIMEOUT_MS: 5000
