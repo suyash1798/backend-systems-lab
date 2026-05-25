@@ -2,13 +2,14 @@
 
 Run from the repo root.
 
-## Room Play Load Test
+## Spin Load Test
 
-This joins each connection to a room, then sends `play` messages with only `requestId`.
+This joins each connection to a room, then sends `spin` messages with `roundId`, `betAmount`, and `requestId`.
 
 ```bash
 docker compose --profile loadtest run --rm --build \
-  -e ACTION=play \
+  -e ACTION=spin \
+  -e BET_AMOUNT=10 \
   -e CONNECTIONS=100 \
   -e ROOMS=10 \
   -e JOIN_ON_OPEN=true \

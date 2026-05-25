@@ -7,7 +7,7 @@ const client = new GameWebSocketClient({
   roomId: config.roomId,
   heartbeatIntervalMs: config.heartbeatIntervalMs,
   heartbeatGraceMs: config.heartbeatGraceMs,
-  playIntervalMs: config.playIntervalMs,
+  spinIntervalMs: config.spinIntervalMs,
   reconnectDelayMs: config.reconnectDelayMs
 });
 

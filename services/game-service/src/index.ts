@@ -14,7 +14,7 @@ const pubSub = new RedisPubSub(config.redisUrl, config.redisChannel);
 const gameSocketServer = new GameSocketServer({
   server,
   heartbeatIntervalMs: Number(config.heartbeatIntervalMs),
-  playHandler: (userId) => walletClient.playForUser(userId),
+  adjustWallet: (userId, amount) => walletClient.adjustBalance(userId, amount),
   pubSub,
   serverId: config.serverId
 });

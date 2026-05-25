@@ -68,7 +68,7 @@ class LoadTestRunner {
   }
 
   sendMessage(client) {
-    this.sendRequest(client, buildActionPayload(this.config.action, client));
+    this.sendRequest(client, buildActionPayload(this.config.action, client, this.config));
   }
 
   sendRequest(client, payload) {

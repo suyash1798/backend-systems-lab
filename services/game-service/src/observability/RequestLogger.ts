@@ -1,6 +1,6 @@
 import { log } from './logger';
 
-type RequestTrace = {
+type RequestTrace = Record<string, unknown> & {
   action: string;
   requestId?: string | null;
   connectionId: string;

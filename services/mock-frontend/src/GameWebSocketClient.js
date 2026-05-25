@@ -1,16 +1,16 @@
 const WebSocket = require('ws');
 
 class GameWebSocketClient {
-  constructor({ wsUrl, userId, roomId, heartbeatIntervalMs, heartbeatGraceMs, playIntervalMs, reconnectDelayMs }) {
+  constructor({ wsUrl, userId, roomId, heartbeatIntervalMs, heartbeatGraceMs, spinIntervalMs, reconnectDelayMs }) {
     this.wsUrl = wsUrl;
     this.userId = userId;
     this.roomId = roomId;
     this.heartbeatIntervalMs = heartbeatIntervalMs;
     this.heartbeatGraceMs = heartbeatGraceMs;
-    this.playIntervalMs = playIntervalMs;
+    this.spinIntervalMs = spinIntervalMs;
     this.reconnectDelayMs = reconnectDelayMs;
     this.ws = null;
-    this.playInterval = null;
+    this.spinInterval = null;
     this.heartbeatTimeout = null;
     this.reconnectTimeout = null;
   }
@@ -29,7 +29,7 @@ class GameWebSocketClient {
     console.log('connected to game-service via websocket');
     this.resetHeartbeatTimeout();
     this.joinRoom();
-    this.startPlaying();
+    this.startSpinning();
   }
 
   handleMessage(message) {
@@ -46,8 +46,8 @@ class GameWebSocketClient {
     console.error('ws error', err.message);
   }
 
-  startPlaying() {
-    this.playInterval = setInterval(() => this.sendPlayMessage(), this.playIntervalMs);
+  startSpinning() {
+    this.spinInterval = setInterval(() => this.sendSpinMessage(), this.spinIntervalMs);
   }
 
   joinRoom() {
@@ -58,9 +58,13 @@ class GameWebSocketClient {
     });
   }
 
-  sendPlayMessage() {
+  sendSpinMessage() {
+    const now = Date.now();
     this.send({
-      action: 'play'
+      action: 'spin',
+      requestId: `spin-${now}`,
+      roundId: `round-${now}`,
+      betAmount: 10
     });
   }
 
@@ -82,7 +86,7 @@ class GameWebSocketClient {
   }
 
   clearTimers() {
-    clearInterval(this.playInterval);
+    clearInterval(this.spinInterval);
     clearTimeout(this.heartbeatTimeout);
     clearTimeout(this.reconnectTimeout);
   }

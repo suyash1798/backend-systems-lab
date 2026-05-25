@@ -15,7 +15,7 @@ network:
 
 variables:
   TARGET_URL: ws://game-service:3000
-  ACTION: play
+  ACTION: spin
   JOIN_ON_OPEN: true
   CONNECTIONS: 500
   ROOMS: 20

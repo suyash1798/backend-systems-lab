@@ -6,7 +6,15 @@ function buildJoinPayload(client) {
   };
 }
 
-function buildActionPayload(action, client) {
+function buildActionPayload(action, client, config) {
+  if (action === 'spin') {
+    return {
+      action,
+      roundId: `${client.userId}-${Date.now()}`,
+      betAmount: config.betAmount
+    };
+  }
+
   return {
     action
   };

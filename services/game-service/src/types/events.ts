@@ -6,6 +6,10 @@ export interface PlayerEvent {
   sourceConnectionId: string;
   action?: string;
   balance?: number;
+  roundId?: string;
+  betAmount?: number;
+  winAmount?: number;
+  symbols?: string[];
   serverId?: string;
   timestamp?: string;
 }

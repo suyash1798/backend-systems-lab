@@ -1,11 +1,11 @@
 import { randomUUID } from 'crypto';
 import { Server as HttpServer } from 'http';
 import { RawData, WebSocketServer } from 'ws';
+import GameActions, { WalletAdjustHandler } from '../game/GameActions';
 import RedisPubSub from '../infra/redisPubSub';
 import { log } from '../observability/logger';
 import { PlayerEvent } from '../types/events';
 import { GameSocket, IncomingMessagePayload } from '../types/websocket';
-import GameActions, { PlayHandler } from './gameActions';
 import Heartbeat from './Heartbeat';
 
 class GameSocketServer {
@@ -17,20 +17,20 @@ class GameSocketServer {
   constructor({
     server,
     heartbeatIntervalMs,
-    playHandler,
+    adjustWallet,
     pubSub,
     serverId
   }: {
     server: HttpServer;
     heartbeatIntervalMs: number;
-    playHandler: PlayHandler;
+    adjustWallet: WalletAdjustHandler;
     pubSub: RedisPubSub;
     serverId: string;
   }) {
     this.wss = new WebSocketServer({ server });
     this.heartbeat = new Heartbeat(this.wss, heartbeatIntervalMs);
     this.pubSub = pubSub;
-    this.actions = new GameActions(playHandler, pubSub, serverId);
+    this.actions = new GameActions(adjustWallet, pubSub, serverId);
   }
 
   start(): void {

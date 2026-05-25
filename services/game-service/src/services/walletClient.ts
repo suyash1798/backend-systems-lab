@@ -8,7 +8,7 @@ class WalletClient {
     this.baseUrl = baseUrl;
   }
 
-  async playForUser(userId: string): Promise<WalletAdjustResponse> {
+  async adjustBalance(userId: string, amount: number): Promise<WalletAdjustResponse> {
     if (!userId) {
       throw new Error('userId required');
     }
@@ -16,7 +16,7 @@ class WalletClient {
     const url = `${this.baseUrl}/adjust`;
     const resp = await fetch(url, {
       method: 'POST',
-      body: JSON.stringify({ userId, amount: -10 }),
+      body: JSON.stringify({ userId, amount }),
       headers: { 'Content-Type': 'application/json' }
     });
 

@@ -9,6 +9,6 @@ module.exports = {
   roomId: process.env.ROOM_ID || 'room-1',
   heartbeatIntervalMs: numberFromEnv('WS_HEARTBEAT_INTERVAL_MS', 30000),
   heartbeatGraceMs: numberFromEnv('WS_HEARTBEAT_GRACE_MS', 5000),
-  playIntervalMs: numberFromEnv('PLAY_INTERVAL_MS', 5000),
+  spinIntervalMs: numberFromEnv('SPIN_INTERVAL_MS', 5000),
   reconnectDelayMs: numberFromEnv('WS_RECONNECT_DELAY_MS', 2000)
 };

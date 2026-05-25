@@ -10,9 +10,11 @@ export interface GameSocket extends WebSocket {
 }
 
 export interface IncomingMessagePayload {
-  action: 'join' | 'play';
+  action: 'join' | 'spin';
   userId?: string;
   roomId?: string;
+  roundId?: string;
+  betAmount?: number;
   requestId?: string | null;
 }
 
