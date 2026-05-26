@@ -21,9 +21,8 @@ class WalletClient {
     });
 
     if (!resp.ok) {
-      const detail = await resp.json().catch(() => ({ error: 'wallet error' }));
       const err = new Error('wallet service error') as WalletError;
-      err.detail = detail;
+      err.detail = resp.json();
       err.status = resp.status;
       err.url = url;
       throw err;

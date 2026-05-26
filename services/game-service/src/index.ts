@@ -1,46 +1,57 @@
+import { Server as HttpServer } from 'http';
 import config from './config';
-import createApp from './http/createApp';
+import { createApp } from './http';
+import RedisPubSub from './infra/redisPubSub';
 import WalletClient from './services/walletClient';
 import GameSocketServer from './websocket/GameSocketServer';
-import RedisPubSub from './infra/redisPubSub';
 
-const walletClient = new WalletClient(config.walletUrl);
+class GameServiceApp {
+  private readonly walletClient = new WalletClient(config.walletUrl);
+  private readonly pubSub = new RedisPubSub(config.redisUrl, config.redisChannel);
+  private httpServer: HttpServer | null = null;
+  private gameSocketServer: GameSocketServer | null = null;
+  private stopping = false;
 
-const app = createApp();
-const server = app.listen(config.port, () => console.log(`game-service listening on ${config.port}`));
+  async start(): Promise<void> {
+    await this.pubSub.connect();
 
-const pubSub = new RedisPubSub(config.redisUrl, config.redisChannel);
+    this.httpServer = createApp().listen(
+      config.port,
+      () => console.log(`game-service listening on ${config.port}`)
+    );
 
-const gameSocketServer = new GameSocketServer({
-  server,
-  heartbeatIntervalMs: Number(config.heartbeatIntervalMs),
-  adjustWallet: (userId, amount) => walletClient.adjustBalance(userId, amount),
-  pubSub,
-  serverId: config.serverId
-});
+    this.gameSocketServer = new GameSocketServer({
+      server: this.httpServer,
+      heartbeatIntervalMs: Number(config.heartbeatIntervalMs),
+      adjustWallet: (userId, amount) => this.walletClient.adjustBalance(userId, amount),
+      pubSub: this.pubSub,
+      serverId: config.serverId
+    });
 
-let stopping = false;
-
-async function start() {
-  await pubSub.connect();
-  gameSocketServer.start();
-}
-
-async function stop() {
-  if (stopping) {
-    return;
+    this.gameSocketServer.start();
+    this.registerShutdownHooks();
   }
 
-  stopping = true;
-  gameSocketServer.stop();
-  await pubSub.close();
-  server.close();
+  async stop(): Promise<void> {
+    if (this.stopping) {
+      return;
+    }
+
+    this.stopping = true;
+    this.gameSocketServer?.stop();
+    await this.pubSub.close();
+    this.httpServer?.close();
+  }
+
+  private registerShutdownHooks(): void {
+    process.on('SIGTERM', () => this.stop());
+    process.on('SIGINT', () => this.stop());
+  }
 }
 
-process.on('SIGTERM', () => stop());
-process.on('SIGINT', () => stop());
+const app = new GameServiceApp();
 
-start().catch((err) => {
+app.start().catch((err) => {
   console.error('failed to start game-service', err);
   process.exit(1);
 });
