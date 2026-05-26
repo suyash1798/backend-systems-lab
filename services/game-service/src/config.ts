@@ -4,5 +4,6 @@ export default {
   heartbeatIntervalMs: process.env.WS_HEARTBEAT_INTERVAL_MS || 30000,
   redisUrl: process.env.REDIS_URL || 'redis://redis:6379',
   redisChannel: process.env.REDIS_CHANNEL || 'game-events',
+  idempotencyTtlSeconds: process.env.IDEMPOTENCY_TTL_SECONDS || 300,
   serverId: process.env.HOSTNAME || `game-service-${process.pid}`
 };

@@ -4,7 +4,7 @@ Run from the repo root.
 
 ## Spin Load Test
 
-This joins each connection to a room, then sends `spin` messages with `roundId`, `betAmount`, and `requestId`.
+This joins each connection to a room, then sends `spin` messages with `spinId`, `betAmount`, and `requestId`.
 
 ```bash
 docker compose --profile loadtest run --rm --build \

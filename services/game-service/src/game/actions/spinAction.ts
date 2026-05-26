@@ -1,6 +1,6 @@
-import { WalletError } from '../../types/wallet';
+import AppError from '../../errors/AppError';
 import { IncomingMessagePayload, GameSocket } from '../../types/websocket';
-import { ActionContext, remember, RequestTrace, send, walletErrorDetail } from './types';
+import { ActionContext, remember, RequestTrace } from './types';
 
 const symbols = ['CHERRY', 'LEMON', 'BELL', 'SEVEN'];
 
@@ -12,23 +12,29 @@ export async function spinAction(
   startedAt: number,
   idempotencyKey: string | null
 ): Promise<void> {
-  const { requestId, roundId, betAmount } = payload;
+  const { requestId, spinId, betAmount } = payload;
 
   if (!requestId) {
     context.logger.failed(trace, startedAt, 'requestId required');
-    send(ws, { status: 'error', error: 'requestId required' });
+    context.responder.error(ws, 'requestId required');
     return;
   }
 
   if (!ws.userId || !ws.roomId) {
     context.logger.failed(trace, startedAt, 'join required');
-    send(ws, { status: 'error', error: 'join required', requestId });
+    context.responder.error(ws, 'join required', requestId);
     return;
   }
 
-  if (!roundId || typeof betAmount !== 'number' || betAmount <= 0) {
-    context.logger.failed(trace, startedAt, 'roundId and positive betAmount required');
-    send(ws, { status: 'error', error: 'roundId and positive betAmount required', requestId });
+  if (!spinId || typeof betAmount !== 'number' || betAmount <= 0) {
+    context.logger.failed(trace, startedAt, 'spinId and positive betAmount required');
+    context.responder.error(ws, 'spinId and positive betAmount required', requestId);
+    return;
+  }
+
+  if (idempotencyKey && !await context.idempotencyStore.reserve(idempotencyKey)) {
+    context.logger.duplicatePending(trace, startedAt);
+    context.responder.pending(ws, requestId);
     return;
   }
 
@@ -48,41 +54,47 @@ export async function spinAction(
       status: 'ok',
       action: 'spin',
       requestId,
-      roundId,
+      spinId,
       betAmount,
       symbols: result.symbols,
       winAmount: result.winAmount,
       balance
     };
 
-    remember(ws, idempotencyKey, response);
-    send(ws, response);
-    context.logger.completed({ ...trace, roundId, betAmount }, startedAt);
-
-    await context.pubSub.publish({
-      type: 'player_action',
+    await remember(ws, idempotencyKey, response, context.idempotencyStore);
+    context.responder.ok(ws, {
       action: 'spin',
-      userId: ws.userId,
-      roomId: ws.roomId,
-      roundId,
+      requestId,
+      spinId,
+      betAmount,
+      symbols: result.symbols,
+      winAmount: result.winAmount,
+      balance
+    });
+    context.logger.completed({ ...trace, spinId, betAmount }, startedAt);
+
+    context.publisher.spinCompleted(ws, {
+      spinId,
       betAmount,
       winAmount: result.winAmount,
       symbols: result.symbols,
       balance,
-      requestId,
-      sourceConnectionId: ws.id,
-      serverId: context.serverId,
-      timestamp: new Date().toISOString()
+      requestId
+    }).catch((publishErr) => {
+      console.error('spin notification publish failed', (publishErr as Error).message);
     });
   } catch (err) {
-    const walletErr = err as WalletError;
-    context.logger.failed(trace, startedAt, walletErr.message, walletErrorDetail(walletErr));
-    send(ws, {
-      status: 'error',
-      error: walletErr.message,
-      detail: walletErr.detail || null,
-      requestId
+    if (idempotencyKey) {
+      await context.idempotencyStore.release(idempotencyKey);
+    }
+
+    const appErr = new AppError((err as Error).message);
+    context.logger.failed(trace, startedAt, appErr.message, {
+      status: appErr.status,
+      source: appErr.source,
+      detail: appErr.detail
     });
+    context.responder.error(ws, appErr.message, requestId, appErr.detail);
   } finally {
     ws.pendingRequests.delete(idempotencyKey || requestId);
   }

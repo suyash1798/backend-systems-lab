@@ -1,6 +1,8 @@
-import RedisPubSub from '../../infra/redisPubSub';
 import RequestLogger from '../../observability/RequestLogger';
-import { WalletAdjustResponse, WalletError } from '../../types/wallet';
+import GameEventPublisher from '../GameEventPublisher';
+import GameResponseSender from '../GameResponseSender';
+import IdempotencyStore from '../IdempotencyStore';
+import { WalletAdjustResponse } from '../../types/wallet';
 import { GameSocket } from '../../types/websocket';
 
 export type WalletAdjustHandler = (userId: string, amount: number) => Promise<WalletAdjustResponse>;
@@ -15,25 +17,20 @@ export type RequestTrace = Record<string, unknown> & {
 
 export interface ActionContext {
   adjustWallet: WalletAdjustHandler;
-  pubSub: RedisPubSub;
-  serverId: string;
+  publisher: GameEventPublisher;
+  idempotencyStore: IdempotencyStore;
   logger: RequestLogger;
+  responder: GameResponseSender;
 }
 
-export function send(ws: GameSocket, payload: object): void {
-  ws.send(JSON.stringify(payload));
-}
-
-export function remember(ws: GameSocket, key: string | null, response: object): void {
+export async function remember(
+  ws: GameSocket,
+  key: string | null,
+  response: object,
+  store: IdempotencyStore
+): Promise<void> {
   if (key) {
     ws.processedRequests.set(key, response);
+    await store.complete(key, response);
   }
-}
-
-export function walletErrorDetail(error: WalletError): object {
-  return {
-    status: error.status,
-    url: error.url,
-    detail: error.detail
-  };
 }

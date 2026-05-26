@@ -10,12 +10,17 @@ export interface GameSocket extends WebSocket {
 }
 
 export interface IncomingMessagePayload {
-  action: 'join' | 'spin';
+  action: GameAction;
   userId?: string;
   roomId?: string;
-  roundId?: string;
+  spinId?: string;
   betAmount?: number;
-  requestId?: string | null;
+  requestId?: string;
+}
+
+enum GameAction{
+  JOIN = 'join',
+  SPIN = 'spin'
 }
 
 export type OutgoingPayload = Record<string, unknown>;

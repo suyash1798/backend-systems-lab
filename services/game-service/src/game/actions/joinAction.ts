@@ -1,5 +1,5 @@
 import { IncomingMessagePayload, GameSocket } from '../../types/websocket';
-import { ActionContext, remember, RequestTrace, send } from './types';
+import { ActionContext, remember, RequestTrace } from './types';
 
 export async function joinAction(
   ws: GameSocket,
@@ -13,25 +13,25 @@ export async function joinAction(
 
   if (!userId || !roomId) {
     context.logger.failed(trace, startedAt, 'userId and roomId required');
-    send(ws, { status: 'error', error: 'userId and roomId required', requestId });
+    context.responder.error(ws, 'userId and roomId required', requestId);
     return;
   }
 
   ws.userId = userId;
   ws.roomId = roomId;
 
+  if (idempotencyKey && !await context.idempotencyStore.reserve(idempotencyKey)) {
+    context.logger.duplicatePending(trace, startedAt);
+    context.responder.pending(ws, requestId);
+    return;
+  }
+
   const response = { status: 'ok', action: 'joined', userId, roomId, requestId };
-  remember(ws, idempotencyKey, response);
-  send(ws, response);
+  await remember(ws, idempotencyKey, response, context.idempotencyStore);
+  context.responder.ok(ws, { action: 'joined', userId, roomId, requestId });
   context.logger.completed({ ...trace, userId, roomId }, startedAt);
 
-  await context.pubSub.publish({
-    type: 'player_joined',
-    userId,
-    roomId,
-    requestId,
-    sourceConnectionId: ws.id,
-    serverId: context.serverId,
-    timestamp: new Date().toISOString()
+  context.publisher.playerJoined(ws, { requestId }).catch((publishErr) => {
+    console.error('join notification publish failed', (publishErr as Error).message);
   });
 }

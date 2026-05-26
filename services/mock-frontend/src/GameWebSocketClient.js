@@ -63,7 +63,7 @@ class GameWebSocketClient {
     this.send({
       action: 'spin',
       requestId: `spin-${now}`,
-      roundId: `round-${now}`,
+      spinId: `spin-${now}`,
       betAmount: 10
     });
   }

@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
-import { WalletAdjustResponse, WalletError } from '../types/wallet';
+import AppError from '../errors/AppError';
+import { WalletAdjustResponse } from '../types/wallet';
 
 class WalletClient {
   private readonly baseUrl: string;
@@ -21,11 +22,8 @@ class WalletClient {
     });
 
     if (!resp.ok) {
-      const err = new Error('wallet service error') as WalletError;
-      err.detail = resp.json();
-      err.status = resp.status;
-      err.url = url;
-      throw err;
+      const detail = await resp.json().catch(() => null);
+      throw new AppError('wallet service error', resp.status, { url, detail }, 'wallet-service');
     }
 
     return resp.json() as Promise<WalletAdjustResponse>;
