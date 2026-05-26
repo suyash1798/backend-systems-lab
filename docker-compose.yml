@@ -9,6 +9,18 @@ services:
       - redis-data:/data
     restart: unless-stopped
 
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=game_service
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   wallet-service:
     build: ./services/wallet-service
     ports:
@@ -23,9 +35,11 @@ services:
       - WALLET_URL=http://wallet-service:4000
       - REDIS_URL=redis://redis:6379
       - REDIS_CHANNEL=game-events
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/game_service
     depends_on:
       - wallet-service
       - redis
+      - postgres
     restart: unless-stopped
 
   # mock-frontend:
@@ -58,5 +72,6 @@ services:
 
 volumes:
   redis-data:
+  postgres-data:
   zookeeper-data:
   kafka-data:

@@ -61,6 +61,17 @@ export async function spinAction(
       balance
     };
 
+    await context.spinStore.saveCompletedSpin({
+      userId: ws.userId,
+      roomId: ws.roomId,
+      requestId,
+      spinId,
+      betAmount,
+      winAmount: result.winAmount,
+      symbols: result.symbols,
+      balance
+    });
+
     await remember(ws, idempotencyKey, response, context.idempotencyStore);
     context.responder.ok(ws, {
       action: 'spin',

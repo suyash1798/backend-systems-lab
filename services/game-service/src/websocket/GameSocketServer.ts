@@ -3,6 +3,7 @@ import { Server as HttpServer } from 'http';
 import { RawData, WebSocketServer } from 'ws';
 import GameActions, { WalletAdjustHandler } from '../game/GameActions';
 import IdempotencyStore from '../game/IdempotencyStore';
+import SpinStore from '../game/SpinStore';
 import RedisPubSub from '../infra/redisPubSub';
 import { log } from '../observability/logger';
 import { PlayerEvent } from '../types/events';
@@ -21,6 +22,7 @@ class GameSocketServer {
     adjustWallet,
     pubSub,
     idempotencyStore,
+    spinStore,
     serverId
   }: {
     server: HttpServer;
@@ -28,12 +30,13 @@ class GameSocketServer {
     adjustWallet: WalletAdjustHandler;
     pubSub: RedisPubSub;
     idempotencyStore: IdempotencyStore;
+    spinStore: SpinStore;
     serverId: string;
   }) {
     this.wss = new WebSocketServer({ server });
     this.heartbeat = new Heartbeat(this.wss, heartbeatIntervalMs);
     this.pubSub = pubSub;
-    this.actions = new GameActions(adjustWallet, pubSub, serverId, idempotencyStore);
+    this.actions = new GameActions(adjustWallet, pubSub, serverId, idempotencyStore, spinStore);
   }
 
   start(): void {

@@ -2,6 +2,7 @@ import RequestLogger from '../../observability/RequestLogger';
 import GameEventPublisher from '../GameEventPublisher';
 import GameResponseSender from '../GameResponseSender';
 import IdempotencyStore from '../IdempotencyStore';
+import SpinStore from '../SpinStore';
 import { WalletAdjustResponse } from '../../types/wallet';
 import { GameSocket } from '../../types/websocket';
 
@@ -19,6 +20,7 @@ export interface ActionContext {
   adjustWallet: WalletAdjustHandler;
   publisher: GameEventPublisher;
   idempotencyStore: IdempotencyStore;
+  spinStore: SpinStore;
   logger: RequestLogger;
   responder: GameResponseSender;
 }

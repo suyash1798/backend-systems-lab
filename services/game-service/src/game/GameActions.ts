@@ -7,6 +7,7 @@ import GameEventPublisher from './GameEventPublisher';
 import GameResponseSender from './GameResponseSender';
 import IdempotencyStore from './IdempotencyStore';
 import Idempotency from './idempotency';
+import SpinStore from './SpinStore';
 import {
   ActionContext,
   RequestTrace,
@@ -24,6 +25,7 @@ class GameActions {
     pubSub: RedisPubSub,
     serverId: string,
     idempotencyStore: IdempotencyStore,
+    spinStore: SpinStore,
     logger = new RequestLogger(),
     responder = new GameResponseSender(),
     idempotency = new Idempotency()
@@ -33,6 +35,7 @@ class GameActions {
       adjustWallet,
       publisher: new GameEventPublisher(pubSub, serverId),
       idempotencyStore,
+      spinStore,
       logger,
       responder
     };

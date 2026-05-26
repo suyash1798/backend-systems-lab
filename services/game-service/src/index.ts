@@ -1,7 +1,9 @@
 import { Server as HttpServer } from 'http';
+import { PrismaClient } from '@prisma/client';
 import config from './config';
 import { createApp } from './http';
 import IdempotencyStore from './game/IdempotencyStore';
+import SpinStore from './game/SpinStore';
 import RedisKeyValueClient from './infra/RedisKeyValueClient';
 import RedisPubSub from './infra/redisPubSub';
 import WalletClient from './services/walletClient';
@@ -11,6 +13,8 @@ class GameServiceApp {
   private readonly walletClient = new WalletClient(config.walletUrl);
   private readonly pubSub = new RedisPubSub(config.redisUrl, config.redisChannel);
   private readonly redisKeyValue = new RedisKeyValueClient(config.redisUrl);
+  private readonly prisma = new PrismaClient();
+  private readonly spinStore = new SpinStore(this.prisma);
   private readonly idempotencyStore = new IdempotencyStore(
     this.redisKeyValue,
     Number(config.idempotencyTtlSeconds)
@@ -22,6 +26,7 @@ class GameServiceApp {
   async start(): Promise<void> {
     await this.pubSub.connect();
     await this.redisKeyValue.connect();
+    await this.prisma.$connect();
 
     this.httpServer = createApp().listen(
       config.port,
@@ -34,6 +39,7 @@ class GameServiceApp {
       adjustWallet: (userId, amount) => this.walletClient.adjustBalance(userId, amount),
       pubSub: this.pubSub,
       idempotencyStore: this.idempotencyStore,
+      spinStore: this.spinStore,
       serverId: config.serverId
     });
 
@@ -50,6 +56,7 @@ class GameServiceApp {
     this.gameSocketServer?.stop();
     await this.pubSub.close();
     await this.redisKeyValue.close();
+    await this.prisma.$disconnect();
     this.httpServer?.close();
   }
 
