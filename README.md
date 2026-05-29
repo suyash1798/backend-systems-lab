@@ -54,13 +54,49 @@ sh scripts/start-local.sh
 Health checks:
 
 ```bash
+curl http://localhost:8080
 curl http://localhost:3000
 curl http://localhost:4000
 curl http://localhost:5000
 curl http://localhost:6000
 ```
 
-## Device Login
+Local gateway routes:
+
+```text
+http://localhost:8080/app/*    -> app-service
+ws://localhost:8080/game/ws    -> game-service
+```
+
+## App Launch Flow
+
+The app-facing BFF can launch a game in one call. It creates/fetches the player, assigns a room, and returns the WebSocket URL.
+
+```bash
+curl -X POST http://localhost:8080/app/games/slot-1/launch \
+  -H "Content-Type: application/json" \
+  -d '{"deviceId":"device-1"}'
+```
+
+Response:
+
+```json
+{
+  "playerId": "player-...",
+  "accessToken": "...",
+  "room": {
+    "roomId": "room-...",
+    "gameId": "slot-1",
+    "status": "OPEN",
+    "capacity": 5,
+    "playerCount": 1,
+    "players": ["player-..."]
+  },
+  "websocketUrl": "ws://localhost:8080/game/ws"
+}
+```
+
+## Internal Device Login
 
 Create or fetch a player for a device:
 
@@ -81,7 +117,7 @@ Response:
 }
 ```
 
-## Lobby Flow
+## Internal Lobby Flow
 
 Load a game before opening the WebSocket connection.
 
@@ -119,7 +155,7 @@ Then connect to your configured WebSocket URL and join with the returned `roomId
 Local:
 
 ```text
-ws://localhost:3000
+ws://localhost:8080/game/ws
 ```
 
 Inside Docker network:

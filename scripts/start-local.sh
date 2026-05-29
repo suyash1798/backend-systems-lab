@@ -16,4 +16,4 @@ echo "Running game-service database migrations..."
 docker compose run --rm game-service npm run db:migrate
 
 echo "Starting services..."
-docker compose up --build user-service lobby-service wallet-service game-service
+docker compose up --build user-service lobby-service app-service wallet-service game-service nginx-gateway
