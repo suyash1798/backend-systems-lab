@@ -1,0 +1,14 @@
+$kind: websocket-request
+name: Spin
+url: '{{gameServiceWsUrl}}'
+description: |-
+  Send this message after `join` succeeds:
+
+  {
+    "action": "spin",
+    "requestId": "spin-1",
+    "gameId": "{{gameId}}",
+    "spinId": "{{spinId}}",
+    "betAmount": {{betAmount}}
+  }
+order: 4000

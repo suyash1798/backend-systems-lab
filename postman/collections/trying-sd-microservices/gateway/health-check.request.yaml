@@ -1,0 +1,5 @@
+$kind: http-request
+name: Health Check (Gateway)
+method: GET
+url: '{{gatewayUrl}}/'
+order: 1000

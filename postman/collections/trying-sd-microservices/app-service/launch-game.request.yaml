@@ -1,0 +1,18 @@
+$kind: http-request
+name: Launch Game
+method: POST
+url: '{{appServiceUrl}}/games/:gameId/launch'
+examples: .resources/launch-game.resources/examples
+order: 2000
+pathVariables:
+  - key: gameId
+    value: '{{gameId}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "deviceId": "{{deviceId}}"
+    }

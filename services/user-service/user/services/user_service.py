@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from random import randint
 
 import jwt
 
@@ -19,7 +19,7 @@ class UserService:
                 player = self.players.get_by_device(conn, request.deviceId)
 
                 if not player:
-                    player = self.players.create(conn, self._new_player_id(), request.deviceId)
+                    player = self.players.create(conn, self._new_player_id(conn), request.deviceId)
 
                 self.players.mark_seen(conn, player["player_id"])
                 token = self._token(player["player_id"], player["device_id"])
@@ -41,5 +41,11 @@ class UserService:
         }
         return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
-    def _new_player_id(self):
-        return f"player-{uuid4()}"
+    def _new_player_id(self, conn):
+        for _ in range(10):
+            player_id = str(randint(100000, 999999))
+
+            if not self.players.exists(conn, player_id):
+                return player_id
+
+        raise RuntimeError("could not generate player id")

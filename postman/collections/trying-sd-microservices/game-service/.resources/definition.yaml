@@ -1,0 +1,12 @@
+$kind: collection
+description: |-
+  The game-service WebSocket server runs on port 3000 and handles real-time game interactions.
+
+  Connect to `{{gameServiceWsUrl}}` through the local Nginx gateway and send JSON messages with the following actions:
+
+  - **join** — Join a game room. Payload: `{ action, requestId, roomId, token }`
+  - **spin** — Trigger a spin. Payload: `{ action, requestId, gameId, spinId, betAmount }`
+  - **end_round** — End the current round. Payload: `{ action, requestId }`
+  - **persistent_data** — Send or sync persistent game data. Payload: `{ action, requestId, gameId, data }`
+
+  Messages are sent interactively after establishing the WebSocket connection.

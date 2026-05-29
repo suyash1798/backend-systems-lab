@@ -1,0 +1,17 @@
+$kind: http-request
+name: Setup Jackpot
+method: POST
+url: '{{walletServiceUrl}}/jackpots'
+order: 5000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "gameId": "{{gameId}}",
+      "jackpotName": "Grand Jackpot",
+      "initialAmount": 10000,
+      "contributionPercent": "0.05"
+    }

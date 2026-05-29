@@ -1,0 +1,13 @@
+$kind: websocket-request
+name: Join Room
+url: '{{gameServiceWsUrl}}'
+description: |-
+  Send this message after connecting:
+
+  {
+    "action": "join",
+    "requestId": "join-1",
+    "roomId": "{{roomId}}",
+    "token": "{{accessToken}}"
+  }
+order: 3000

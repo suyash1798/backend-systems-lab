@@ -1,0 +1,8 @@
+# Use this workspace to collaborate
+workspace:
+  id: a2ca9dd1-f260-48af-8f16-6725710aa01a
+
+localResources:
+  docs:
+    - ../services/ws-load-tester/README.md
+    - ../README.md

@@ -1,0 +1,14 @@
+$kind: http-request
+name: Device Login
+method: POST
+url: '{{userServiceUrl}}/devices'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "deviceId": "{{deviceId}}"
+    }

@@ -82,7 +82,7 @@ Response:
 
 ```json
 {
-  "playerId": "player-...",
+  "playerId": "123456",
   "accessToken": "...",
   "room": {
     "roomId": "room-...",
@@ -90,7 +90,7 @@ Response:
     "status": "OPEN",
     "capacity": 5,
     "playerCount": 1,
-    "players": ["player-..."]
+    "players": ["123456"]
   },
   "websocketUrl": "ws://localhost:8080/game/ws"
 }
@@ -110,7 +110,7 @@ Response:
 
 ```json
 {
-  "playerId": "player-...",
+  "playerId": "123456",
   "accessToken": "...",
   "tokenType": "Bearer",
   "expiresIn": 86400
@@ -137,7 +137,7 @@ Response:
   "status": "OPEN",
   "capacity": 5,
   "playerCount": 1,
-  "players": ["player-..."]
+  "players": ["123456"]
 }
 ```
 

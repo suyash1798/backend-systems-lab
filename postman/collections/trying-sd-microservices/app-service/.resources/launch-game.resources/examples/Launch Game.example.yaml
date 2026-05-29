@@ -1,0 +1,45 @@
+$kind: http-example
+request:
+  url: "{{appServiceUrl}}/games/:gameId/launch"
+  method: POST
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    - key: gameId
+      value: "{{gameId}}"
+  body:
+    type: json
+    content: |-
+      {
+        "deviceId": "{{deviceId}}"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    x-powered-by: Express
+    content-type: application/json; charset=utf-8
+    content-length: "310"
+    etag: W/"136-example"
+    date: Fri, 29 May 2026 09:52:29 GMT
+    connection: keep-alive
+    keep-alive: timeout=5
+  body:
+    type: json
+    content: |-
+      {
+        "playerId": "123456",
+        "accessToken": "ACCESS_TOKEN",
+        "room": {
+          "roomId": "room-...",
+          "gameId": "slot-1",
+          "status": "OPEN",
+          "capacity": 5,
+          "playerCount": 1,
+          "players": [
+            "123456"
+          ]
+        },
+        "websocketUrl": "ws://localhost:8080/game/ws"
+      }
+order: 1780048618964

@@ -19,6 +19,16 @@ class PlayerRepository:
             (player_id, device_id),
         ).fetchone()
 
+    def exists(self, conn, player_id: str):
+        return conn.execute(
+            """
+            select 1
+            from players
+            where player_id = %s
+            """,
+            (player_id,),
+        ).fetchone() is not None
+
     def mark_seen(self, conn, player_id: str):
         conn.execute(
             """

@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get Room
+method: GET
+url: '{{lobbyServiceUrl}}/rooms/:room_id'
+order: 3000
+pathVariables:
+  - key: room_id
+    value: '{{roomId}}'

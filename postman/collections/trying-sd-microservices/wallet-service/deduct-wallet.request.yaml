@@ -1,0 +1,18 @@
+$kind: http-request
+name: Deduct Wallet
+method: POST
+url: '{{walletServiceUrl}}/deduct'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "userId": "{{playerId}}",
+      "amount": 100,
+      "transactionId": "txn-001",
+      "gameId": "{{gameId}}",
+      "referenceId": "ref-001"
+    }

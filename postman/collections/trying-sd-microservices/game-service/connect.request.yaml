@@ -1,0 +1,10 @@
+$kind: websocket-request
+name: Connect
+url: '{{gameServiceWsUrl}}'
+description: |-
+  Connect through the local Nginx gateway.
+
+  After launching the game, copy `accessToken` and `room.roomId` into collection variables:
+  - accessToken
+  - roomId
+order: 2000

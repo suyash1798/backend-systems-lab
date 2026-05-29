@@ -1,0 +1,17 @@
+$kind: http-request
+name: Credit Wallet
+method: POST
+url: '{{walletServiceUrl}}/credit'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "userId": "{{playerId}}",
+      "amount": 100,
+      "transactionId": "txn-002",
+      "referenceId": "ref-001"
+    }

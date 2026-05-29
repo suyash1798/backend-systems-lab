@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "name": "New flow",
+  "description": "",
+  "flow": {
+    "description": "",
+    "nodes": {
+      "xdslabMB": {
+        "type": "ev/endpoint@3",
+        "pos": {
+          "x": 0,
+          "y": 0
+        },
+        "config": {
+          "inputs": [
+            {
+              "id": "Dwb50BKQ",
+              "type": "value/reference@2",
+              "kind": "reference",
+              "value": "",
+              "key": "Input 1",
+              "__noIn": true
+            }
+          ],
+          "data": "",
+          "language": "json",
+          "allowAnyType": false
+        },
+        "ui": {
+          "data": {
+            "triggerType": "ev/endpoint@3"
+          },
+          "namedInputsExpanded": true
+        }
+      }
+    },
+    "connections": {
+      "xAwYXp9z": {
+        "source": "PPBRRTnh",
+        "sourcePort": "@",
+        "target": "xdslabMB",
+        "targetPort": "inputs|Dwb50BKQ"
+      }
+    },
+    "annotations": {},
+    "groups": {},
+    "webhook": {
+      "payloadContent": "body-only",
+      "responseType": "default"
+    },
+    "forms": {},
+    "modules": {},
+    "io": {
+      "PPBRRTnh": {
+        "type": "input",
+        "name": "Input 1",
+        "typeDef": {
+          "type": "string"
+        }
+      }
+    },
+    "ports": {},
+    "meta": {},
+    "scenes": {},
+    "scenarios": {
+      "lh5e4Y-o": {
+        "name": "Start Trigger",
+        "type": "scenario@3",
+        "triggerType": "ev/endpoint@3",
+        "createdOn": 1780050123135,
+        "updatedOn": 1780050123135,
+        "data": {
+          "PPBRRTnh": {
+            "id": "PPBRRTnh",
+            "key": "Input 1",
+            "value": "",
+            "type": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "config": {
+      "definitions": {},
+      "constants": {}
+    }
+  },
+  "lockbox": {},
+  "info": {
+    "_postman_id": "4a219f18-f0f5-4787-b028-58591bf29705"
+  },
+  "_postman_exported_at": "2026-05-29T10:22:04.150Z",
+  "_postman_exported_using": "Postman/Local Mode"
+}

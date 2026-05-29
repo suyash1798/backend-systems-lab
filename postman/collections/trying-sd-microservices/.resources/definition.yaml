@@ -1,0 +1,31 @@
+$kind: collection
+name: Trying-SD Microservices
+variables:
+  - key: gatewayUrl
+    value: 'http://localhost:8080'
+  - key: gameServiceWsUrl
+    value: 'ws://localhost:8080/game/ws'
+  - key: appServiceUrl
+    value: 'http://localhost:8080/app'
+  - key: userServiceUrl
+    value: 'http://localhost:6000'
+  - key: lobbyServiceUrl
+    value: 'http://localhost:5000'
+  - key: walletServiceUrl
+    value: 'http://localhost:4000'
+  - key: gameServiceUrl
+    value: 'http://localhost:3000'
+  - key: deviceId
+    value: 'device-abc123'
+  - key: gameId
+    value: 'slot-1'
+  - key: playerId
+    value: ''
+  - key: roomId
+    value: ''
+  - key: accessToken
+    value: ''
+  - key: spinId
+    value: '1'
+  - key: betAmount
+    value: '100'

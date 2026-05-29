@@ -1,0 +1,11 @@
+$kind: websocket-request
+name: End Round
+url: '{{gameServiceWsUrl}}'
+description: |-
+  Send this message after spins are complete:
+
+  {
+    "action": "end_round",
+    "requestId": "end-round-1"
+  }
+order: 5000
