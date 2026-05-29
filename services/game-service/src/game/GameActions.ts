@@ -13,6 +13,7 @@ import IdempotencyRepository from '../repositories/IdempotencyRepository';
 import Idempotency from './idempotency';
 import RoundRepository from '../repositories/RoundRepository';
 import SpinRepository from '../repositories/SpinRepository';
+import RoomMembershipRepository from '../repositories/RoomMembershipRepository';
 import GamePlayerDataService from './services/GamePlayerDataService';
 import RoundService from './services/RoundService';
 import SpinService from './services/SpinService';
@@ -38,6 +39,7 @@ class GameActions {
     gamePlayerDataRepository: GamePlayerDataRepository,
     currentRoundRepository: CurrentRoundRepository,
     idempotencyRepository: IdempotencyRepository,
+    roomMembershipRepository: RoomMembershipRepository,
     roundRepository: RoundRepository,
     spinRepository: SpinRepository,
     private readonly tokenVerifier: JwtTokenVerifier,
@@ -50,6 +52,7 @@ class GameActions {
       gamePlayerDataService: new GamePlayerDataService(gamePlayerDataRepository),
       publisher: new GameEventPublisher(pubSub, serverId),
       idempotencyRepository,
+      roomMembershipRepository,
       roundService: new RoundService(currentRoundRepository, roundRepository),
       spinService: new SpinService(
         deductWallet,
@@ -75,6 +78,20 @@ class GameActions {
     const trace = this.trace(ws, payload);
     const { action, requestId } = payload;
     const key = this.idempotency.key(ws, payload);
+
+    if (action === 'join') {
+      if (!payload.userId) {
+        this.context.logger.failed(trace, startedAt, 'invalid token');
+        this.context.responder.error(ws, 'invalid token', requestId);
+        return;
+      }
+
+      if (!await this.context.roomMembershipRepository.exists(payload.userId, payload.roomId)) {
+        this.context.logger.failed(trace, startedAt, 'room membership required');
+        this.context.responder.error(ws, 'room membership required', requestId);
+        return;
+      }
+    }
 
     if (key && ws.processedRequests.has(key)) {
       this.context.logger.duplicateCompleted(trace, startedAt);

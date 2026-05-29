@@ -27,6 +27,16 @@ class RoomRegistry {
     });
   }
 
+  closeExistingUserConnection(userId: string, current: GameSocket): void {
+    this.rooms.forEach((clients) => {
+      clients.forEach((ws) => {
+        if (ws !== current && ws.userId === userId && ws.readyState === WebSocket.OPEN) {
+          ws.close(4000, 'new connection opened');
+        }
+      });
+    });
+  }
+
   notify(event: PlayerEvent): void {
     const clients = this.rooms.get(event.roomId);
 

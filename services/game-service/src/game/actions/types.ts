@@ -2,6 +2,7 @@ import RequestLogger from '../../observability/RequestLogger';
 import GameEventPublisher from '../GameEventPublisher';
 import GameResponseSender from '../GameResponseSender';
 import IdempotencyRepository from '../../repositories/IdempotencyRepository';
+import RoomMembershipRepository from '../../repositories/RoomMembershipRepository';
 import GamePlayerDataService from '../services/GamePlayerDataService';
 import RoundService from '../services/RoundService';
 import SpinService from '../services/SpinService';
@@ -35,6 +36,7 @@ export interface ActionContext {
   gamePlayerDataService: GamePlayerDataService;
   publisher: GameEventPublisher;
   idempotencyRepository: IdempotencyRepository;
+  roomMembershipRepository: RoomMembershipRepository;
   roundService: RoundService;
   spinService: SpinService;
   logger: RequestLogger;

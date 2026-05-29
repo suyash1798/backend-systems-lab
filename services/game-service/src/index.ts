@@ -6,6 +6,7 @@ import CurrentRoundRepository from './repositories/CurrentRoundRepository';
 import GamePlayerDataRepository from './repositories/GamePlayerDataRepository';
 import IdempotencyRepository from './repositories/IdempotencyRepository';
 import RoundRepository from './repositories/RoundRepository';
+import RoomMembershipRepository from './repositories/RoomMembershipRepository';
 import SpinRepository from './repositories/SpinRepository';
 import DynamoDbClient from './infra/DynamoDbClient';
 import RedisKeyValueClient from './infra/RedisKeyValueClient';
@@ -30,6 +31,7 @@ class GameServiceApp {
   );
   private readonly currentRoundRepository = new CurrentRoundRepository(this.redisKeyValue);
   private readonly roundRepository = new RoundRepository(this.prisma);
+  private readonly roomMembershipRepository = new RoomMembershipRepository(this.prisma);
   private readonly spinRepository = new SpinRepository(this.prisma);
   private readonly idempotencyRepository = new IdempotencyRepository(
     this.redisKeyValue,
@@ -59,6 +61,7 @@ class GameServiceApp {
       gamePlayerDataRepository: this.gamePlayerDataRepository,
       currentRoundRepository: this.currentRoundRepository,
       idempotencyRepository: this.idempotencyRepository,
+      roomMembershipRepository: this.roomMembershipRepository,
       roundRepository: this.roundRepository,
       spinRepository: this.spinRepository,
       tokenVerifier: this.tokenVerifier,

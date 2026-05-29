@@ -51,6 +51,26 @@ class RoomRepository:
             (room_id, user_id),
         )
 
+    def remove_player_from_other_rooms(self, conn, user_id: str, room_id: str):
+        removed_rooms = conn.execute(
+            """
+            delete from game_room_players
+            where user_id = %s and room_id <> %s
+            returning room_id
+            """,
+            (user_id, room_id),
+        ).fetchall()
+
+        for removed_room in removed_rooms:
+            conn.execute(
+                """
+                update game_rooms
+                set status = 'OPEN', closed_at = null
+                where room_id = %s and status = 'FULL'
+                """,
+                (removed_room["room_id"],),
+            )
+
     def close_if_full(self, conn, room_id: str, max_players: int):
         count = conn.execute(
             """

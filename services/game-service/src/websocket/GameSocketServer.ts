@@ -6,6 +6,7 @@ import CurrentRoundRepository from '../repositories/CurrentRoundRepository';
 import GamePlayerDataRepository from '../repositories/GamePlayerDataRepository';
 import IdempotencyRepository from '../repositories/IdempotencyRepository';
 import RoundRepository from '../repositories/RoundRepository';
+import RoomMembershipRepository from '../repositories/RoomMembershipRepository';
 import SpinRepository from '../repositories/SpinRepository';
 import RedisPubSub from '../infra/redisPubSub';
 import JwtTokenVerifier from '../infra/JwtTokenVerifier';
@@ -32,6 +33,7 @@ class GameSocketServer {
     gamePlayerDataRepository,
     currentRoundRepository,
     idempotencyRepository,
+    roomMembershipRepository,
     roundRepository,
     spinRepository,
     tokenVerifier,
@@ -45,6 +47,7 @@ class GameSocketServer {
     gamePlayerDataRepository: GamePlayerDataRepository;
     currentRoundRepository: CurrentRoundRepository;
     idempotencyRepository: IdempotencyRepository;
+    roomMembershipRepository: RoomMembershipRepository;
     roundRepository: RoundRepository;
     spinRepository: SpinRepository;
     tokenVerifier: JwtTokenVerifier;
@@ -61,6 +64,7 @@ class GameSocketServer {
       gamePlayerDataRepository,
       currentRoundRepository,
       idempotencyRepository,
+      roomMembershipRepository,
       roundRepository,
       spinRepository,
       tokenVerifier
@@ -107,6 +111,9 @@ class GameSocketServer {
     }
 
     await this.actions.handle(ws, payload);
+    if (payload.action === 'join' && ws.userId) {
+      this.rooms.closeExistingUserConnection(ws.userId, ws);
+    }
     this.rooms.sync(ws);
   }
 

@@ -20,6 +20,7 @@ class LobbyService:
                 if not room:
                     room = self.rooms.create(conn, self._new_room_id(), game_id)
 
+                self.rooms.remove_player_from_other_rooms(conn, player_id, room["room_id"])
                 self.rooms.add_player(conn, room["room_id"], player_id)
                 self.rooms.close_if_full(conn, room["room_id"], MAX_ROOM_PLAYERS)
                 return self._room_response(conn, room["room_id"])
