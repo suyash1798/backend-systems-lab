@@ -9,7 +9,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "sourceMap": true,
+    "inlineSources": true
   },
   "include": ["src/**/*.ts"]
 }

@@ -1,6 +1,7 @@
 $kind: collection
 description: |-
-  The game-service WebSocket server runs on port 3000 and handles real-time game interactions.
+  The game-service HTTP health/outbox API uses `{{gameServiceHttpUrl}}`.
+  The game-service WebSocket server uses `{{gameServiceWsUrl}}` and handles real-time game interactions.
 
   Connect to `{{gameServiceWsUrl}}` through the local Nginx gateway and send JSON messages with the following actions:
 

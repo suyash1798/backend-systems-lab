@@ -7,6 +7,8 @@ export interface OutboxEventRecord {
   payload: object;
 }
 
+export type OutboxStats = Record<string, number>;
+
 class OutboxRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -61,6 +63,22 @@ class OutboxRepository {
     await this.prisma.outboxEvent.update({
       where: { id },
       data: { status: 'pending' }
+    });
+  }
+
+  async stats(): Promise<OutboxStats> {
+    const rows = await this.prisma.outboxEvent.groupBy({
+      by: ['status'],
+      _count: { _all: true }
+    });
+
+    return rows.reduce<OutboxStats>((stats, row) => {
+      stats[row.status] = row._count._all;
+      return stats;
+    }, {
+      pending: 0,
+      publishing: 0,
+      published: 0
     });
   }
 }

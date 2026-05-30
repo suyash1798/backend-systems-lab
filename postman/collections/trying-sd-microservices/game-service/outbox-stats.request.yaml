@@ -1,0 +1,5 @@
+$kind: http-request
+name: Outbox Stats
+method: GET
+url: '{{gameServiceHttpUrl}}/outbox/stats'
+order: 2000

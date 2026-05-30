@@ -99,9 +99,13 @@ services:
     restart: unless-stopped
 
   game-service:
-    build: ./services/game-service
+    build:
+      context: ./services/game-service
+      dockerfile: Dockerfile.debug
+    command: npm run start:debug
     ports:
       - "3000:3000"
+      - "9229:9229"
     environment:
       - WALLET_URL=http://wallet-service:4000
       - REDIS_URL=redis://redis:6379

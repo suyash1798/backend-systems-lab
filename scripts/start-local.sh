@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
+
 echo "Starting infrastructure..."
 docker compose up -d redis postgres dynamodb kafka
 

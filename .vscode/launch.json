@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach Game Service (Docker)",
+      "type": "node",
+      "request": "attach",
+      "address": "localhost",
+      "port": 9229,
+      "restart": true,
+      "localRoot": "${workspaceFolder}/services/game-service",
+      "remoteRoot": "/app",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "../src/*": "${workspaceFolder}/services/game-service/src/*",
+        "/app/src/*": "${workspaceFolder}/services/game-service/src/*",
+        "webpack:///./src/*": "${workspaceFolder}/services/game-service/src/*"
+      },
+      "outFiles": [
+        "${workspaceFolder}/services/game-service/src/**/*.ts",
+        "${workspaceFolder}/services/game-service/dist/**/*.js"
+      ],
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    }
+  ]
+}

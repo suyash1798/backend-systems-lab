@@ -15,6 +15,8 @@ variables:
     value: 'http://localhost:4000'
   - key: gameServiceUrl
     value: 'http://localhost:3000'
+  - key: gameServiceHttpUrl
+    value: 'http://localhost:3000'
   - key: analyticsServiceUrl
     value: 'http://localhost:9000'
   - key: deviceId

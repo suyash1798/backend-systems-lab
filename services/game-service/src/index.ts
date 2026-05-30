@@ -58,7 +58,7 @@ class GameServiceApp {
     await this.prisma.$connect();
     await this.gamePlayerDataRepository.ensureTable();
 
-    this.httpServer = createApp().listen(
+    this.httpServer = createApp(this.outboxRepository).listen(
       config.port,
       () => console.log(`game-service listening on ${config.port}`)
     );
