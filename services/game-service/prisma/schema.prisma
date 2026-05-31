@@ -35,8 +35,26 @@ model GameRound {
   createdAt   DateTime   @default(now()) @map("created_at")
   completedAt DateTime?  @map("completed_at")
   spins       GameSpin[]
+  actions     RoundAction[]
 
   @@map("game_rounds")
+}
+
+model RoundAction {
+  id        BigInt    @id @default(autoincrement())
+  roundId   String    @map("round_id")
+  userId    String    @map("user_id")
+  roomId    String    @map("room_id")
+  action    String
+  requestId String    @map("request_id")
+  payload   Json
+  result    Json?
+  createdAt DateTime  @default(now()) @map("created_at")
+  round     GameRound @relation(fields: [roundId], references: [roundId])
+
+  @@unique([roundId, action, requestId])
+  @@index([roundId, createdAt])
+  @@map("round_actions")
 }
 
 model OutboxEvent {

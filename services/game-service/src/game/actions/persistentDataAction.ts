@@ -35,6 +35,15 @@ export async function persistentDataAction(
     await remember(ws, idempotencyKey, response, context.idempotencyRepository);
     context.responder.ok(ws, response);
     context.logger.completed({ ...trace, gameId }, startedAt);
+
+    if (ws.roomId) {
+      await context.roundService.recordActionIfActive(ws.userId, ws.roomId, {
+        action: 'persistent_data',
+        requestId,
+        payload: { gameId, data },
+        result: { status: 'ok' }
+      });
+    }
   } catch (err) {
     if (idempotencyKey) {
       await context.idempotencyRepository.release(idempotencyKey);

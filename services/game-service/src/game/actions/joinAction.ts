@@ -26,9 +26,10 @@ export async function joinAction(
     return;
   }
 
-  const response = { status: 'ok', action: 'joined', userId, roomId, requestId };
+  const roundHistory = await context.roundService.history(userId, roomId);
+  const response = { status: 'ok', action: 'joined', userId, roomId, requestId, roundHistory };
   await remember(ws, idempotencyKey, response, context.idempotencyRepository);
-  context.responder.ok(ws, { action: 'joined', userId, roomId, requestId });
+  context.responder.ok(ws, { action: 'joined', userId, roomId, requestId, roundHistory });
   context.logger.completed({ ...trace, userId, roomId }, startedAt);
 
   context.publisher.playerJoined(ws, { requestId }).catch((publishErr) => {

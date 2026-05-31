@@ -2,6 +2,7 @@ import CurrentRoundRepository from '../../repositories/CurrentRoundRepository';
 import RoundRepository from '../../repositories/RoundRepository';
 import SpinRepository from '../../repositories/SpinRepository';
 import { WalletCreditHandler, WalletDeductHandler } from '../actions/types';
+import { ActiveRound } from '../models/Round';
 
 const symbols = ['CHERRY', 'LEMON', 'BELL', 'SEVEN'];
 
@@ -42,7 +43,7 @@ class SpinService {
   ) {}
 
   async spin(request: SpinRequest): Promise<SpinResponse> {
-    const round = await this.currentRoundRepository.getOrCreate(request.userId, request.roomId);
+    const round = await this.activeRound(request.userId, request.roomId);
     const spinNumber = this.spinNumber(request.spinId);
 
     const existing = await this.spinRepository.findCompletedByUserRoundAndSpinId(
@@ -118,9 +119,41 @@ class SpinService {
       symbols: result.symbols,
       balance
     });
-    await this.currentRoundRepository.recordSpin(round, spinNumber);
+    const updatedRound = await this.currentRoundRepository.recordSpin(round, spinNumber);
+    await this.currentRoundRepository.recordAction(updatedRound, {
+      action: 'spin',
+      requestId: request.requestId,
+      payload: {
+        gameId: request.gameId,
+        spinId: request.spinId,
+        betAmount: request.betAmount
+      },
+      result: {
+        roundId: response.roundId,
+        symbols: response.symbols,
+        winAmount: response.winAmount,
+        balance: response.balance
+      }
+    });
 
     return response;
+  }
+
+  private async activeRound(userId: string, roomId: string): Promise<ActiveRound> {
+    const cached = await this.currentRoundRepository.get(userId, roomId);
+
+    if (cached) {
+      return cached;
+    }
+
+    const persisted = await this.roundRepository.findActive(userId, roomId);
+
+    if (persisted) {
+      await this.currentRoundRepository.restore(persisted);
+      return persisted;
+    }
+
+    return this.currentRoundRepository.getOrCreate(userId, roomId);
   }
 
   private spinNumber(spinId: string): number {

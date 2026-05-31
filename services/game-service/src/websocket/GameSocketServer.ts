@@ -5,6 +5,7 @@ import GameActions, { WalletCreditHandler, WalletDeductHandler } from '../game/G
 import CurrentRoundRepository from '../repositories/CurrentRoundRepository';
 import GamePlayerDataRepository from '../repositories/GamePlayerDataRepository';
 import IdempotencyRepository from '../repositories/IdempotencyRepository';
+import RoundActionRepository from '../repositories/RoundActionRepository';
 import RoundRepository from '../repositories/RoundRepository';
 import RoomMembershipRepository from '../repositories/RoomMembershipRepository';
 import SpinRepository from '../repositories/SpinRepository';
@@ -34,6 +35,7 @@ class GameSocketServer {
     currentRoundRepository,
     idempotencyRepository,
     roomMembershipRepository,
+    roundActionRepository,
     roundRepository,
     spinRepository,
     tokenVerifier,
@@ -48,6 +50,7 @@ class GameSocketServer {
     currentRoundRepository: CurrentRoundRepository;
     idempotencyRepository: IdempotencyRepository;
     roomMembershipRepository: RoomMembershipRepository;
+    roundActionRepository: RoundActionRepository;
     roundRepository: RoundRepository;
     spinRepository: SpinRepository;
     tokenVerifier: JwtTokenVerifier;
@@ -65,6 +68,7 @@ class GameSocketServer {
       currentRoundRepository,
       idempotencyRepository,
       roomMembershipRepository,
+      roundActionRepository,
       roundRepository,
       spinRepository,
       tokenVerifier

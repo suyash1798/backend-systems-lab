@@ -11,6 +11,7 @@ import GameResponseSender from './GameResponseSender';
 import CurrentRoundRepository from '../repositories/CurrentRoundRepository';
 import IdempotencyRepository from '../repositories/IdempotencyRepository';
 import Idempotency from './idempotency';
+import RoundActionRepository from '../repositories/RoundActionRepository';
 import RoundRepository from '../repositories/RoundRepository';
 import SpinRepository from '../repositories/SpinRepository';
 import RoomMembershipRepository from '../repositories/RoomMembershipRepository';
@@ -40,6 +41,7 @@ class GameActions {
     currentRoundRepository: CurrentRoundRepository,
     idempotencyRepository: IdempotencyRepository,
     roomMembershipRepository: RoomMembershipRepository,
+    roundActionRepository: RoundActionRepository,
     roundRepository: RoundRepository,
     spinRepository: SpinRepository,
     private readonly tokenVerifier: JwtTokenVerifier,
@@ -53,7 +55,7 @@ class GameActions {
       publisher: new GameEventPublisher(pubSub, serverId),
       idempotencyRepository,
       roomMembershipRepository,
-      roundService: new RoundService(currentRoundRepository, roundRepository),
+      roundService: new RoundService(currentRoundRepository, roundRepository, roundActionRepository),
       spinService: new SpinService(
         deductWallet,
         creditWallet,

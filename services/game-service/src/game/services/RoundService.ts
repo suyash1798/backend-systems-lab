@@ -1,6 +1,8 @@
 import AppError from '../../errors/AppError';
 import CurrentRoundRepository from '../../repositories/CurrentRoundRepository';
+import RoundActionRepository from '../../repositories/RoundActionRepository';
 import RoundRepository from '../../repositories/RoundRepository';
+import { RoundAction } from '../models/Round';
 
 export interface EndRoundResponse {
   status: 'ok';
@@ -13,7 +15,8 @@ export interface EndRoundResponse {
 class RoundService {
   constructor(
     private readonly currentRoundRepository: CurrentRoundRepository,
-    private readonly roundRepository: RoundRepository
+    private readonly roundRepository: RoundRepository,
+    private readonly roundActionRepository: RoundActionRepository
   ) {}
 
   async endRound({
@@ -40,6 +43,43 @@ class RoundService {
       roundId: round.roundId,
       spinCount: round.spinCount
     };
+  }
+
+  async history(userId: string, roomId: string): Promise<RoundAction[]> {
+    const round = await this.currentRoundRepository.get(userId, roomId)
+      || await this.roundRepository.findActive(userId, roomId);
+
+    if (!round) {
+      return [];
+    }
+
+    const history = await this.roundActionRepository.listForRound(round.roundId);
+
+    if (history.length > 0 && round.history.length === 0) {
+      await this.currentRoundRepository.restore({ ...round, history });
+    }
+
+    return history;
+  }
+
+  async recordActionIfActive(
+    userId: string,
+    roomId: string,
+    action: Omit<RoundAction, 'createdAt'>
+  ): Promise<void> {
+    const round = await this.currentRoundRepository.get(userId, roomId);
+
+    if (!round) {
+      return;
+    }
+
+    await this.roundActionRepository.save({
+      roundId: round.roundId,
+      userId,
+      roomId,
+      ...action
+    });
+    await this.currentRoundRepository.recordAction(round, action);
   }
 }
 

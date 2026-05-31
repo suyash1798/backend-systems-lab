@@ -6,6 +6,7 @@ import CurrentRoundRepository from './repositories/CurrentRoundRepository';
 import GamePlayerDataRepository from './repositories/GamePlayerDataRepository';
 import IdempotencyRepository from './repositories/IdempotencyRepository';
 import RoundRepository from './repositories/RoundRepository';
+import RoundActionRepository from './repositories/RoundActionRepository';
 import RoomMembershipRepository from './repositories/RoomMembershipRepository';
 import OutboxRepository from './repositories/OutboxRepository';
 import SpinRepository from './repositories/SpinRepository';
@@ -39,6 +40,7 @@ class GameServiceApp {
   );
   private readonly currentRoundRepository = new CurrentRoundRepository(this.redisKeyValue);
   private readonly roundRepository = new RoundRepository(this.prisma);
+  private readonly roundActionRepository = new RoundActionRepository(this.prisma);
   private readonly roomMembershipRepository = new RoomMembershipRepository(this.prisma);
   private readonly outboxRepository = new OutboxRepository(this.prisma);
   private readonly spinRepository = new SpinRepository(this.prisma);
@@ -73,6 +75,7 @@ class GameServiceApp {
       currentRoundRepository: this.currentRoundRepository,
       idempotencyRepository: this.idempotencyRepository,
       roomMembershipRepository: this.roomMembershipRepository,
+      roundActionRepository: this.roundActionRepository,
       roundRepository: this.roundRepository,
       spinRepository: this.spinRepository,
       tokenVerifier: this.tokenVerifier,

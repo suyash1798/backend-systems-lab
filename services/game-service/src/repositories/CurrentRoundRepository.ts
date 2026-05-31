@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import RedisKeyValueClient from '../infra/RedisKeyValueClient';
-import { ActiveRound } from '../game/models/Round';
+import { ActiveRound, RoundAction } from '../game/models/Round';
 
 class CurrentRoundRepository {
   constructor(private readonly redis: RedisKeyValueClient) {}
@@ -23,7 +23,8 @@ class CurrentRoundRepository {
       roomId,
       status: 'ACTIVE',
       spinCount: 0,
-      lastSpinId: 0
+      lastSpinId: 0,
+      history: []
     };
 
     await this.save(round);
@@ -36,6 +37,40 @@ class CurrentRoundRepository {
       spinCount: round.spinCount + 1,
       lastSpinId: spinId
     };
+    await this.save(updated);
+    return updated;
+  }
+
+  async restore(round: ActiveRound): Promise<void> {
+    await this.save(round);
+  }
+
+  async history(userId: string, roomId: string): Promise<RoundAction[]> {
+    const round = await this.get(userId, roomId);
+    return round?.history || [];
+  }
+
+  async recordAction(
+    round: ActiveRound,
+    action: Omit<RoundAction, 'createdAt'>
+  ): Promise<ActiveRound> {
+    const latest = await this.get(round.userId, round.roomId);
+
+    if (!latest) {
+      return round;
+    }
+
+    const updated = {
+      ...latest,
+      history: [
+        ...latest.history,
+        {
+          ...action,
+          createdAt: new Date().toISOString()
+        }
+      ]
+    };
+
     await this.save(updated);
     return updated;
   }
@@ -62,7 +97,8 @@ class CurrentRoundRepository {
       roomId: round.roomId || '',
       status: 'ACTIVE',
       spinCount: round.spinCount || 0,
-      lastSpinId: round.lastSpinId || round.spinCount || 0
+      lastSpinId: round.lastSpinId || round.spinCount || 0,
+      history: round.history || []
     };
   }
 

@@ -76,6 +76,37 @@ class SpinRepository {
         },
         skipDuplicates: true
       });
+
+      await tx.$executeRaw`
+        insert into round_actions (
+          round_id,
+          user_id,
+          room_id,
+          action,
+          request_id,
+          payload,
+          result
+        )
+        values (
+          ${spin.roundId},
+          ${spin.userId},
+          ${spin.roomId},
+          'spin',
+          ${spin.requestId},
+          ${JSON.stringify({
+            gameId: spin.gameId,
+            spinId: spin.spinId,
+            betAmount: spin.betAmount
+          })}::jsonb,
+          ${JSON.stringify({
+            roundId: spin.roundId,
+            symbols: spin.symbols,
+            winAmount: spin.winAmount,
+            balance: spin.balance
+          })}::jsonb
+        )
+        on conflict (round_id, action, request_id) do nothing
+      `;
     });
   }
 }
