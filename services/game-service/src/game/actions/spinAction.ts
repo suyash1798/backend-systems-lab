@@ -27,17 +27,22 @@ class SpinAction implements GameActionHandler<SpinPayload> {
     return this.context.spinService.spin(request);
   }
 
-  async onSuccess(ws: GameSocket, response: object, trace: RequestTrace): Promise<void> {
+  async onSuccess(
+    ws: GameSocket,
+    _payload: SpinPayload,
+    response: object,
+    trace: RequestTrace
+  ): Promise<void> {
     const spin = response as SpinResponse;
     const spinCompleteData = {
-        roundId: spin.roundId,
-        spinId: spin.spinId,
-        betAmount: spin.betAmount,
-        winAmount: spin.winAmount,
-        symbols: spin.symbols,
-        balance: spin.balance,
-        requestId: spin.requestId
-      };
+      roundId: spin.roundId,
+      spinId: spin.spinId,
+      betAmount: spin.betAmount,
+      winAmount: spin.winAmount,
+      symbols: spin.symbols,
+      balance: spin.balance,
+      requestId: spin.requestId
+    };
 
     try {
       await this.context.publisher.spinCompleted(ws, spinCompleteData);

@@ -7,14 +7,22 @@ import {
   SpinPayload
 } from '../types/websocket';
 
+interface IdempotencyContext {
+  activeRoundId?: (userId: string, roomId: string) => Promise<string | null> | string | null;
+}
+
 class Idempotency {
-  public key(ws: GameSocket, payload: IncomingMessagePayload): string | null {
+  public async key(
+    ws: GameSocket,
+    payload: IncomingMessagePayload,
+    context: IdempotencyContext = {}
+  ): Promise<string | null> {
     if (payload.action === 'join') {
       return this.joinKey(payload);
     }
 
     if (payload.action === 'spin') {
-      return this.spinKey(ws, payload);
+      return this.spinKey(ws, payload, context);
     }
 
     if (payload.action === 'end_round') {
@@ -36,14 +44,24 @@ class Idempotency {
     return `join:${payload.userId}:${payload.roomId}:${payload.requestId}`;
   }
 
-  private spinKey(ws: GameSocket, payload: SpinPayload): string | null {
-    const userId = ws.userId;
+  private async spinKey(
+    ws: GameSocket,
+    payload: SpinPayload,
+    context: IdempotencyContext
+  ): Promise<string | null> {
+    const { userId, roomId } = ws;
 
-    if (!userId) {
+    if (!userId || !roomId) {
       return null;
     }
 
-    return `spin:${userId}:${payload.requestId}`;
+    const roundId = await context.activeRoundId?.(userId, roomId);
+
+    if (!roundId) {
+      return null;
+    }
+
+    return `spin:${roundId}:${payload.spinId}`;
   }
 
   private endRoundKey(ws: GameSocket, payload: EndRoundPayload): string | null {

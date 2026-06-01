@@ -1,3 +1,18 @@
+export interface SpinIntent {
+  userId: string;
+  roomId: string;
+  roundId: string;
+  gameId: string;
+  requestId: string;
+  spinId: string;
+  betAmount: number;
+}
+
+export interface PendingSpin extends SpinIntent {
+  id: bigint;
+  created: boolean;
+}
+
 export interface CompletedSpin {
   userId: string;
   roomId: string;

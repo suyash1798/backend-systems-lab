@@ -100,27 +100,43 @@ class GameActions {
       return;
     }
 
-    const trace = this.trace(ws, payload);
-    const key = this.idempotency.key(ws, payload);
     const handler = this.handlers[payload.action] as GameActionHandler<IncomingMessagePayload>;
+    const idempotencyKey = await this.idempotencyKey(ws, payload);
+    const trace = this.trace(ws, payload, idempotencyKey);
 
     await this.executor.execute({
       ws,
       payload,
       trace,
       startedAt,
-      idempotencyKey: key,
+      idempotencyKey,
       handler,
       hasConflict: (response) => this.hasConflict(payload, response),
       onDuplicateResponse: (response) => this.restoreSocketContext(ws, response)
     });
   }
 
-  private trace(ws: GameSocket, payload: IncomingMessagePayload): RequestTrace {
+  private async idempotencyKey(
+    ws: GameSocket,
+    payload: IncomingMessagePayload
+  ): Promise<string | null> {
+    return this.idempotency.key(ws, payload, {
+      activeRoundId: async (userId, roomId) => {
+        const round = await this.context.spinService.activeRound(userId, roomId);
+        return round.roundId;
+      }
+    });
+  }
+
+  private trace(
+    ws: GameSocket,
+    payload: IncomingMessagePayload,
+    idempotencyKey: string | null
+  ): RequestTrace {
     return {
       action: payload.action,
       requestId: payload.requestId,
-      idempotencyKey: this.idempotency.key(ws, payload),
+      idempotencyKey,
       connectionId: ws.id,
       userId: this.payloadUserId(payload) || ws.userId,
       roomId: this.payloadRoomId(payload) || ws.roomId

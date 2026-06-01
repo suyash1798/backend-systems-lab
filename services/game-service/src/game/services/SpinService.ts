@@ -46,8 +46,7 @@ class SpinService {
     const round = await this.activeRound(request.userId, request.roomId);
     const spinNumber = this.spinNumber(request.spinId);
 
-    const existing = await this.spinRepository.findCompletedByUserRoundAndSpinId(
-      request.userId,
+    const existing = await this.spinRepository.findCompletedByRoundAndSpinId(
       round.roundId,
       request.spinId
     );
@@ -72,14 +71,36 @@ class SpinService {
     }
 
     await this.roundRepository.saveStarted(round);
-
-    const debit = await this.deductWallet({
+    const pendingSpin = await this.spinRepository.createPendingSpin({
       userId: request.userId,
-      amount: request.betAmount,
-      transactionId: `wallet:${request.userId}:${round.roundId}:${request.spinId}:bet`,
+      roomId: request.roomId,
+      roundId: round.roundId,
       gameId: request.gameId,
-      referenceId: request.spinId
+      requestId: request.requestId,
+      spinId: request.spinId,
+      betAmount: request.betAmount
     });
+
+    if (!pendingSpin.created) {
+      throw new Error('spin already pending');
+    }
+
+    const walletTransactionPrefix = `wallet:spin:${pendingSpin.id.toString()}`;
+    let debit;
+
+    try {
+      debit = await this.deductWallet({
+        userId: request.userId,
+        amount: request.betAmount,
+        transactionId: `${walletTransactionPrefix}:bet`,
+        gameId: request.gameId,
+        referenceId: pendingSpin.id.toString()
+      });
+    } catch (err) {
+      await this.spinRepository.markFailed(pendingSpin.id);
+      throw err;
+    }
+
     const result = this.roll(request.betAmount);
     let balance = debit.balance;
 
@@ -87,11 +108,24 @@ class SpinService {
       const credit = await this.creditWallet({
         userId: request.userId,
         amount: result.winAmount,
-        transactionId: `wallet:${request.userId}:${round.roundId}:${request.spinId}:win`,
-        referenceId: request.spinId
+        transactionId: `${walletTransactionPrefix}:win`,
+        referenceId: pendingSpin.id.toString()
       });
       balance = credit.balance;
     }
+
+    const completedSpin = {
+      userId: request.userId,
+      roomId: request.roomId,
+      roundId: round.roundId,
+      gameId: request.gameId,
+      requestId: request.requestId,
+      spinId: request.spinId,
+      betAmount: request.betAmount,
+      winAmount: result.winAmount,
+      symbols: result.symbols,
+      balance
+    };
 
     const response: SpinResponse = {
       status: 'ok',
@@ -107,18 +141,7 @@ class SpinService {
       jackpotContributions: debit.jackpotContributions
     };
 
-    await this.spinRepository.saveCompletedSpin({
-      userId: request.userId,
-      roomId: request.roomId,
-      roundId: round.roundId,
-      gameId: request.gameId,
-      requestId: request.requestId,
-      spinId: request.spinId,
-      betAmount: request.betAmount,
-      winAmount: result.winAmount,
-      symbols: result.symbols,
-      balance
-    });
+    await this.spinRepository.completeSpin(pendingSpin.id, completedSpin);
     const updatedRound = await this.currentRoundRepository.recordSpin(round, spinNumber);
     await this.currentRoundRepository.recordAction(updatedRound, {
       action: 'spin',
@@ -139,7 +162,7 @@ class SpinService {
     return response;
   }
 
-  private async activeRound(userId: string, roomId: string): Promise<ActiveRound> {
+  async activeRound(userId: string, roomId: string): Promise<ActiveRound> {
     const cached = await this.currentRoundRepository.get(userId, roomId);
 
     if (cached) {
