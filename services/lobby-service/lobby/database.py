@@ -31,4 +31,18 @@ def migrate():
             )
             """
         )
+        conn.execute(
+            """
+            create table if not exists game_room_invites (
+              invite_id text primary key,
+              room_id text not null references game_rooms(room_id),
+              game_id text not null,
+              invited_by_user_id text not null,
+              invited_user_id text not null,
+              status text not null default 'PENDING',
+              created_at timestamptz not null default now(),
+              expires_at timestamptz not null
+            )
+            """
+        )
         conn.commit()

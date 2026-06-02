@@ -1,3 +1,3 @@
-from lobby.models.requests import LoadGameRequest
+from lobby.models.requests import CreateInviteRequest, LoadGameRequest
 
-__all__ = ["LoadGameRequest"]
+__all__ = ["CreateInviteRequest", "LoadGameRequest"]

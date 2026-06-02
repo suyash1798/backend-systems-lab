@@ -41,6 +41,17 @@ class RoomRepository:
             (room_id,),
         ).fetchone()
 
+    def lock_room(self, conn, room_id: str):
+        return conn.execute(
+            """
+            select room_id, game_id, status, created_at, closed_at
+            from game_rooms
+            where room_id = %s
+            for update
+            """,
+            (room_id,),
+        ).fetchone()
+
     def add_player(self, conn, room_id: str, user_id: str):
         conn.execute(
             """
@@ -72,14 +83,7 @@ class RoomRepository:
             )
 
     def close_if_full(self, conn, room_id: str, max_players: int):
-        count = conn.execute(
-            """
-            select count(*) as player_count
-            from game_room_players
-            where room_id = %s
-            """,
-            (room_id,),
-        ).fetchone()["player_count"]
+        count = self.player_count(conn, room_id)
 
         if count >= max_players:
             conn.execute(
@@ -101,3 +105,25 @@ class RoomRepository:
             """,
             (room_id,),
         ).fetchall()
+
+    def player_count(self, conn, room_id: str):
+        return conn.execute(
+            """
+            select count(*) as player_count
+            from game_room_players
+            where room_id = %s
+            """,
+            (room_id,),
+        ).fetchone()["player_count"]
+
+    def is_player_in_room(self, conn, room_id: str, user_id: str):
+        row = conn.execute(
+            """
+            select 1
+            from game_room_players
+            where room_id = %s and user_id = %s
+            """,
+            (room_id, user_id),
+        ).fetchone()
+
+        return row is not None
