@@ -1,0 +1,13 @@
+model OutboxEvent {
+  id          String    @id @default(uuid())
+  eventKey    String    @unique @map("event_key")
+  eventType   String    @map("event_type")
+  payload     Json
+  status      String    @default("pending")
+  attempts    Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  publishedAt DateTime? @map("published_at")
+
+  @@index([status, createdAt])
+  @@map("outbox_events")
+}

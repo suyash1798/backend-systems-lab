@@ -17,7 +17,7 @@ echo "Running game-service database migrations..."
 docker compose run --rm game-service npm run db:migrate
 
 echo "Starting Prisma Studio in background: http://localhost:5555"
-docker compose run --rm -p 5555:5555 game-service npx prisma studio --hostname 0.0.0.0 &
+docker compose run --rm -p 5555:5555 game-service npx prisma studio --schema prisma/schema --hostname 0.0.0.0 &
 
 echo "Starting DynamoDB Admin in background: http://localhost:8001"
 docker run --rm -p 8001:8001 -e DYNAMO_ENDPOINT=http://host.docker.internal:8000 aaronshaf/dynamodb-admin &

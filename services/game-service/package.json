@@ -4,15 +4,16 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "db:migrate": "prisma migrate deploy",
-    "db:push": "prisma db push",
-    "db:seed": "prisma db seed",
-    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy --schema prisma/schema",
+    "db:push": "prisma db push --schema prisma/schema",
+    "db:seed": "prisma db seed --schema prisma/schema",
+    "prisma:generate": "prisma generate --schema prisma/schema",
     "seed:persistent": "ts-node src/scripts/seedPersistentData.ts",
     "start": "node dist/index.js",
     "start:debug": "node --inspect=0.0.0.0:9229 -r ts-node/register src/index.ts"
   },
   "prisma": {
+    "schema": "prisma/schema",
     "seed": "ts-node prisma/seed/index.ts"
   },
   "dependencies": {
