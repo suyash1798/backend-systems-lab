@@ -5,7 +5,7 @@ interface PlayerJoinedInput {
   requestId?: string | null;
 }
 
-class GameEventPublisher {
+class EventPublisher {
   constructor(
     private readonly pubSub: RedisPubSub,
     private readonly serverId: string
@@ -31,4 +31,4 @@ class GameEventPublisher {
   }
 }
 
-export default GameEventPublisher;
+export default EventPublisher;

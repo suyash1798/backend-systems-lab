@@ -1,7 +1,7 @@
 import AppError from '../../errors/AppError';
 import { GameSocket, IncomingMessagePayload } from '../../types/websocket';
 import { GameActionHandler } from './GameActionHandler';
-import { ActionContext, RequestTrace } from './types';
+import { ActionContext, RequestTrace } from '../types';
 
 interface ExecuteOptions<TPayload extends IncomingMessagePayload> {
   ws: GameSocket;

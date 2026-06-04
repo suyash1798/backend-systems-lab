@@ -1,27 +1,27 @@
 import RedisPubSub from '../../infra/redisPubSub';
 import RequestLogger from '../../observability/RequestLogger';
-import { GameFeature } from '../../game/GameFeature';
-import ChessEventPublisher from './ChessEventPublisher';
-import ChessMoveAction from './ChessMoveAction';
-import ChessRepository from './ChessRepository';
-import ChessService from './ChessService';
-import ChessStateProvider from './ChessStateProvider';
+import { GameFeature } from '../../game/types';
+import EventPublisher from './EventPublisher';
+import MoveAction from './MoveAction';
+import Repository from './Repository';
+import Service from './Service';
+import StateProvider from './StateProvider';
 
 interface ChessFeatureOptions {
-  repository: ChessRepository;
+  repository: Repository;
   pubSub: RedisPubSub;
   serverId: string;
   logger?: RequestLogger;
 }
 
 export function createChessFeature(options: ChessFeatureOptions): GameFeature {
-  const service = new ChessService(options.repository);
-  const publisher = new ChessEventPublisher(options.pubSub, options.serverId);
+  const service = new Service(options.repository);
+  const publisher = new EventPublisher(options.pubSub, options.serverId);
   const logger = options.logger || new RequestLogger();
 
   return {
     handlers: {
-      chess_move: new ChessMoveAction(service, publisher, logger)
+      chess_move: new MoveAction(service, publisher, logger)
     },
     idempotencyKey: (ws, payload) => {
       if (payload.action !== 'chess_move') {
@@ -35,9 +35,9 @@ export function createChessFeature(options: ChessFeatureOptions): GameFeature {
       return `chess_move:${ws.roomId}:${ws.userId}:${payload.requestId}`;
     },
     roomStateProviders: [
-      new ChessStateProvider(service)
+      new StateProvider(service)
     ]
   };
 }
 
-export { ChessRepository };
+export { default as ChessRepository } from './Repository';

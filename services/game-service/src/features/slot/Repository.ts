@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { CompletedSpin, PendingSpin, SpinIntent } from './types';
 
-class SpinRepository {
+class Repository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async findCompletedByRoundAndSpinId(
@@ -192,4 +192,4 @@ class SpinRepository {
   }
 }
 
-export default SpinRepository;
+export default Repository;

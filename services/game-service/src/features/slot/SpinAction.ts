@@ -1,16 +1,16 @@
 import AppError from '../../errors/AppError';
 import RequestLogger from '../../observability/RequestLogger';
 import { GameActionHandler } from '../../game/actions/GameActionHandler';
-import { RequestTrace } from '../../game/actions/types';
+import { RequestTrace } from '../../game/types';
 import { GameSocket } from '../../types/websocket';
-import SlotEventPublisher from './SlotEventPublisher';
-import SlotService, { SpinResponse } from './SlotService';
+import EventPublisher from './EventPublisher';
+import Service, { SpinResponse } from './Service';
 import { SpinPayload } from './types';
 
 class SpinAction implements GameActionHandler<SpinPayload> {
   constructor(
-    private readonly slotService: SlotService,
-    private readonly publisher: SlotEventPublisher,
+    private readonly service: Service,
+    private readonly publisher: EventPublisher,
     private readonly logger: RequestLogger
   ) {}
 
@@ -31,7 +31,7 @@ class SpinAction implements GameActionHandler<SpinPayload> {
       betAmount
     };
 
-    return this.slotService.spin(request);
+    return this.service.spin(request);
   }
 
   async onSuccess(

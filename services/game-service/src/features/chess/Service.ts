@@ -1,6 +1,6 @@
 import { Chess, Square } from 'chess.js';
 import AppError from '../../errors/AppError';
-import ChessRepository from './ChessRepository';
+import Repository from './Repository';
 import { ChessColor, ChessGameSnapshot, ChessGameState } from './types';
 
 export interface ChessMoveRequest {
@@ -30,10 +30,10 @@ export interface ChessMoveResponse {
   gameStatus: string;
 }
 
-class ChessService {
+class Service {
   private readonly initialFen = new Chess().fen();
 
-  constructor(private readonly repository: ChessRepository) {}
+  constructor(private readonly repository: Repository) {}
 
   async state(roomId: string): Promise<ChessGameSnapshot | null> {
     return this.repository.findByRoom(roomId);
@@ -147,4 +147,4 @@ class ChessService {
   }
 }
 
-export default ChessService;
+export default Service;

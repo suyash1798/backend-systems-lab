@@ -1,8 +1,8 @@
 import RedisPubSub from '../../infra/redisPubSub';
 import { GameSocket } from '../../types/websocket';
-import { ChessMoveResponse } from './ChessService';
+import { ChessMoveResponse } from './Service';
 
-class ChessEventPublisher {
+class EventPublisher {
   constructor(
     private readonly pubSub: RedisPubSub,
     private readonly serverId: string
@@ -33,4 +33,4 @@ class ChessEventPublisher {
   }
 }
 
-export default ChessEventPublisher;
+export default EventPublisher;

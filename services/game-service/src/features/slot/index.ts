@@ -2,13 +2,12 @@ import RedisPubSub from '../../infra/redisPubSub';
 import RequestLogger from '../../observability/RequestLogger';
 import CurrentRoundRepository from '../../repositories/CurrentRoundRepository';
 import RoundRepository from '../../repositories/RoundRepository';
-import { GameFeature } from '../../game/GameFeature';
-import { WalletCreditHandler, WalletDeductHandler } from '../../game/actions/types';
+import { GameFeature, WalletCreditHandler, WalletDeductHandler } from '../../game/types';
 import { GameSocket } from '../../types/websocket';
-import SlotEventPublisher from './SlotEventPublisher';
+import EventPublisher from './EventPublisher';
 import SpinAction from './SpinAction';
-import SpinRepository from './SpinRepository';
-import SlotService from './SlotService';
+import Repository from './Repository';
+import Service from './Service';
 import { SpinPayload } from './types';
 
 interface SlotFeatureOptions {
@@ -16,7 +15,7 @@ interface SlotFeatureOptions {
   creditWallet: WalletCreditHandler;
   currentRoundRepository: CurrentRoundRepository;
   roundRepository: RoundRepository;
-  spinRepository: SpinRepository;
+  spinRepository: Repository;
   pubSub: RedisPubSub;
   serverId: string;
   logger?: RequestLogger;
@@ -24,25 +23,25 @@ interface SlotFeatureOptions {
 
 export function createSlotFeature(options: SlotFeatureOptions): GameFeature {
   const logger = options.logger || new RequestLogger();
-  const slotService = new SlotService(
+  const service = new Service(
     options.deductWallet,
     options.creditWallet,
     options.currentRoundRepository,
     options.roundRepository,
     options.spinRepository
   );
-  const publisher = new SlotEventPublisher(options.pubSub, options.serverId);
+  const publisher = new EventPublisher(options.pubSub, options.serverId);
 
   return {
     handlers: {
-      spin: new SpinAction(slotService, publisher, logger)
+      spin: new SpinAction(service, publisher, logger)
     },
     idempotencyKey: async (ws, payload) => {
       if (payload.action !== 'spin') {
         return undefined;
       }
 
-      return spinIdempotencyKey(ws, payload, slotService);
+      return spinIdempotencyKey(ws, payload, service);
     },
     hasConflict: (payload, response) => {
       if (payload.action !== 'spin') {
@@ -57,13 +56,13 @@ export function createSlotFeature(options: SlotFeatureOptions): GameFeature {
 async function spinIdempotencyKey(
   ws: GameSocket,
   payload: SpinPayload,
-  slotService: SlotService
+  service: Service
 ): Promise<string | null> {
   if (!ws.userId || !ws.roomId) {
     return null;
   }
 
-  const round = await slotService.activeRound(ws.userId, ws.roomId);
+  const round = await service.activeRound(ws.userId, ws.roomId);
   return `spin:${round.roundId}:${payload.spinId}`;
 }
 
@@ -81,4 +80,4 @@ function spinConflict(payload: SpinPayload, response?: object): boolean {
   );
 }
 
-export { SpinRepository };
+export { default as SpinRepository } from './Repository';

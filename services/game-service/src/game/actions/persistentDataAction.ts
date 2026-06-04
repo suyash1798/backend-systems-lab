@@ -2,7 +2,7 @@ import AppError from '../../errors/AppError';
 import { GameSocket, PersistentDataPayload } from '../../types/websocket';
 import { PersistentDataResponse } from '../services/GamePlayerDataService';
 import { GameActionHandler } from './GameActionHandler';
-import { ActionContext } from './types';
+import { ActionContext } from '../types';
 
 class PersistentDataAction implements GameActionHandler<PersistentDataPayload> {
   private readonly action = 'persistent_data';

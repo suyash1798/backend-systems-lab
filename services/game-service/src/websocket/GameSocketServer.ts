@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import { Server as HttpServer } from 'http';
 import { RawData, WebSocketServer } from 'ws';
-import GameActions from '../game/GameActions';
+import Actions from '../game/Actions';
 import CurrentRoundRepository from '../repositories/CurrentRoundRepository';
 import GamePlayerDataRepository from '../repositories/GamePlayerDataRepository';
 import IdempotencyRepository from '../repositories/IdempotencyRepository';
@@ -10,12 +10,12 @@ import RoundRepository from '../repositories/RoundRepository';
 import RoomMembershipRepository from '../repositories/RoomMembershipRepository';
 import RedisPubSub from '../infra/redisPubSub';
 import JwtTokenVerifier from '../infra/JwtTokenVerifier';
-import { GameFeature } from '../game/GameFeature';
+import { GameFeature } from '../game/types';
 import { log } from '../observability/logger';
 import { PlayerEvent } from '../types/events';
 import { GameSocket, IncomingMessagePayload } from '../types/websocket';
 import Heartbeat from './Heartbeat';
-import { validateMessage } from './messageValidator';
+import { validateMessage } from '../game/messageSchema';
 import RoomRegistry from './RoomRegistry';
 
 interface GameSocketServerOptions {
@@ -36,7 +36,7 @@ interface GameSocketServerOptions {
 class GameSocketServer {
   private readonly wss: WebSocketServer;
   private readonly heartbeat: Heartbeat;
-  private readonly actions: GameActions;
+  private readonly actions: Actions;
   private readonly pubSub: RedisPubSub;
   private readonly rooms = new RoomRegistry();
 
@@ -59,7 +59,7 @@ class GameSocketServer {
     this.wss = new WebSocketServer({ server });
     this.heartbeat = new Heartbeat(this.wss, heartbeatIntervalMs);
     this.pubSub = pubSub;
-    this.actions = new GameActions(
+    this.actions = new Actions(
       pubSub,
       serverId,
       gamePlayerDataRepository,

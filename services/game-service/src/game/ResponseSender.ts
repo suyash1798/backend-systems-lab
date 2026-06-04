@@ -1,16 +1,16 @@
-import { GameSocket } from "../types/websocket";
+import { GameSocket } from '../types/websocket';
 
-class GameResponseSender {
+class ResponseSender {
   ok(ws: GameSocket, payload: object): void {
-    this.send(ws, { status: "ok", ...payload });
+    this.send(ws, { status: 'ok', ...payload });
   }
 
   error(ws: GameSocket, error: string, requestId?: string, detail?: unknown): void {
-    this.send(ws, { status: "error", error, detail, requestId });
+    this.send(ws, { status: 'error', error, detail, requestId });
   }
 
   pending(ws: GameSocket, requestId?: string | null): void {
-    this.send(ws, { status: "pending", duplicate: true, requestId });
+    this.send(ws, { status: 'pending', duplicate: true, requestId });
   }
 
   duplicate(ws: GameSocket, response: object): void {
@@ -22,4 +22,4 @@ class GameResponseSender {
   }
 }
 
-export default GameResponseSender;
+export default ResponseSender;

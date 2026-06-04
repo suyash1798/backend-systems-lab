@@ -9,7 +9,7 @@ import {
 
 type Transaction = Prisma.TransactionClient;
 
-class ChessRepository {
+class Repository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async withLockedGame<T>(
@@ -179,4 +179,4 @@ interface ChessMoveRow extends Omit<ChessMoveHistory, 'createdAt'> {
   createdAt: Date;
 }
 
-export default ChessRepository;
+export default Repository;

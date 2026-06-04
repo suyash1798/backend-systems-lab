@@ -6,9 +6,9 @@ import EndRoundAction from './actions/endRoundAction';
 import PersistentDataAction from './actions/persistentDataAction';
 import ActionExecutor from './actions/ActionExecutor';
 import { GameActionHandler } from './actions/GameActionHandler';
-import GameEventPublisher from './GameEventPublisher';
+import EventPublisher from './EventPublisher';
 import GamePlayerDataRepository from '../repositories/GamePlayerDataRepository';
-import GameResponseSender from './GameResponseSender';
+import ResponseSender from './ResponseSender';
 import CurrentRoundRepository from '../repositories/CurrentRoundRepository';
 import IdempotencyRepository from '../repositories/IdempotencyRepository';
 import Idempotency from './idempotency';
@@ -18,8 +18,7 @@ import RoomMembershipRepository from '../repositories/RoomMembershipRepository';
 import GamePlayerDataService from './services/GamePlayerDataService';
 import RoundService from './services/RoundService';
 import JwtTokenVerifier from '../infra/JwtTokenVerifier';
-import { GameFeature } from './GameFeature';
-import { ActionContext, RequestTrace } from './actions/types';
+import { ActionContext, GameFeature, RequestTrace } from './types';
 
 type ActionHandlers = {
   [Action in IncomingMessagePayload['action']]: GameActionHandler<
@@ -27,7 +26,7 @@ type ActionHandlers = {
   >;
 };
 
-class GameActions {
+class Actions {
   private readonly context: ActionContext;
   private readonly idempotency: Idempotency;
   private readonly executor: ActionExecutor;
@@ -46,7 +45,7 @@ class GameActions {
     private readonly tokenVerifier: JwtTokenVerifier,
     features: GameFeature[] = [],
     logger = new RequestLogger(),
-    responder = new GameResponseSender(),
+    responder = new ResponseSender(),
     idempotency = new Idempotency()
   ) {
     this.idempotency = idempotency;
@@ -54,7 +53,7 @@ class GameActions {
 
     this.context = {
       gamePlayerDataService: new GamePlayerDataService(gamePlayerDataRepository),
-      publisher: new GameEventPublisher(pubSub, serverId),
+      publisher: new EventPublisher(pubSub, serverId),
       idempotencyRepository,
       roomMembershipRepository,
       roundService: new RoundService(currentRoundRepository, roundRepository, roundActionRepository),
@@ -171,4 +170,4 @@ class GameActions {
   }
 }
 
-export default GameActions;
+export default Actions;

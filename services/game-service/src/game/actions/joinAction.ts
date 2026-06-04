@@ -1,7 +1,7 @@
 import AppError from '../../errors/AppError';
 import { GameSocket, JoinPayload } from '../../types/websocket';
 import { GameActionHandler } from './GameActionHandler';
-import { ActionContext, RequestTrace } from './types';
+import { ActionContext, RequestTrace } from '../types';
 
 class JoinAction implements GameActionHandler<JoinPayload> {
   constructor(private readonly context: ActionContext) {}

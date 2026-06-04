@@ -1,16 +1,16 @@
 import AppError from '../../errors/AppError';
 import RequestLogger from '../../observability/RequestLogger';
 import { GameActionHandler } from '../../game/actions/GameActionHandler';
-import { RequestTrace } from '../../game/actions/types';
+import { RequestTrace } from '../../game/types';
 import { GameSocket } from '../../types/websocket';
-import ChessEventPublisher from './ChessEventPublisher';
-import ChessService, { ChessMoveResponse } from './ChessService';
+import EventPublisher from './EventPublisher';
+import Service, { ChessMoveResponse } from './Service';
 import { ChessMovePayload } from './types';
 
-class ChessMoveAction implements GameActionHandler<ChessMovePayload> {
+class MoveAction implements GameActionHandler<ChessMovePayload> {
   constructor(
-    private readonly chessService: ChessService,
-    private readonly publisher: ChessEventPublisher,
+    private readonly service: Service,
+    private readonly publisher: EventPublisher,
     private readonly logger: RequestLogger
   ) {}
 
@@ -21,7 +21,7 @@ class ChessMoveAction implements GameActionHandler<ChessMovePayload> {
       throw new AppError('join required', 400);
     }
 
-    return this.chessService.move({
+    return this.service.move({
       userId,
       roomId,
       requestId: payload.requestId,
@@ -45,4 +45,4 @@ class ChessMoveAction implements GameActionHandler<ChessMovePayload> {
   }
 }
 
-export default ChessMoveAction;
+export default MoveAction;

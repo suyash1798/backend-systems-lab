@@ -2,7 +2,7 @@ import AppError from '../../errors/AppError';
 import { EndRoundPayload, GameSocket } from '../../types/websocket';
 import { EndRoundResponse } from '../services/RoundService';
 import { GameActionHandler } from './GameActionHandler';
-import { ActionContext } from './types';
+import { ActionContext } from '../types';
 
 class EndRoundAction implements GameActionHandler<EndRoundPayload> {
   constructor(private readonly context: ActionContext) {}

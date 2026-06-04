@@ -1,8 +1,8 @@
 import CurrentRoundRepository from '../../repositories/CurrentRoundRepository';
 import RoundRepository from '../../repositories/RoundRepository';
-import { WalletCreditHandler, WalletDeductHandler } from '../../game/actions/types';
+import { WalletCreditHandler, WalletDeductHandler } from '../../game/types';
 import { ActiveRound } from '../../game/models/Round';
-import SpinRepository from './SpinRepository';
+import Repository from './Repository';
 
 const symbols = ['CHERRY', 'LEMON', 'BELL', 'SEVEN'];
 
@@ -33,20 +33,20 @@ export interface SpinResponse {
   }[];
 }
 
-class SlotService {
+class Service {
   constructor(
     private readonly deductWallet: WalletDeductHandler,
     private readonly creditWallet: WalletCreditHandler,
     private readonly currentRoundRepository: CurrentRoundRepository,
     private readonly roundRepository: RoundRepository,
-    private readonly spinRepository: SpinRepository
+    private readonly repository: Repository
   ) {}
 
   async spin(request: SpinRequest): Promise<SpinResponse> {
     const round = await this.activeRound(request.userId, request.roomId);
     const spinNumber = this.spinNumber(request.spinId);
 
-    const existing = await this.spinRepository.findCompletedByRoundAndSpinId(
+    const existing = await this.repository.findCompletedByRoundAndSpinId(
       round.roundId,
       request.spinId
     );
@@ -71,7 +71,7 @@ class SlotService {
     }
 
     await this.roundRepository.saveStarted(round);
-    const pendingSpin = await this.spinRepository.createPendingSpin({
+    const pendingSpin = await this.repository.createPendingSpin({
       userId: request.userId,
       roomId: request.roomId,
       roundId: round.roundId,
@@ -97,7 +97,7 @@ class SlotService {
         referenceId: pendingSpin.id.toString()
       });
     } catch (err) {
-      await this.spinRepository.markFailed(pendingSpin.id);
+      await this.repository.markFailed(pendingSpin.id);
       throw err;
     }
 
@@ -141,7 +141,7 @@ class SlotService {
       jackpotContributions: debit.jackpotContributions
     };
 
-    await this.spinRepository.completeSpin(pendingSpin.id, completedSpin);
+    await this.repository.completeSpin(pendingSpin.id, completedSpin);
     const updatedRound = await this.currentRoundRepository.recordSpin(round, spinNumber);
     await this.currentRoundRepository.recordAction(updatedRound, {
       action: 'spin',
@@ -217,4 +217,4 @@ class SlotService {
   }
 }
 
-export default SlotService;
+export default Service;
