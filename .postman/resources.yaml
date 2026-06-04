@@ -5,5 +5,4 @@ workspace:
 localResources:
   docs:
     - ../services/ws-load-tester/README.md
-    - ../README.md
     - ../services/game-service/FLOW.md

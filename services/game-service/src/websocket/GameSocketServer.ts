@@ -1,16 +1,16 @@
 import { randomUUID } from 'crypto';
 import { Server as HttpServer } from 'http';
 import { RawData, WebSocketServer } from 'ws';
-import GameActions, { WalletCreditHandler, WalletDeductHandler } from '../game/GameActions';
+import GameActions from '../game/GameActions';
 import CurrentRoundRepository from '../repositories/CurrentRoundRepository';
 import GamePlayerDataRepository from '../repositories/GamePlayerDataRepository';
 import IdempotencyRepository from '../repositories/IdempotencyRepository';
 import RoundActionRepository from '../repositories/RoundActionRepository';
 import RoundRepository from '../repositories/RoundRepository';
 import RoomMembershipRepository from '../repositories/RoomMembershipRepository';
-import SpinRepository from '../repositories/SpinRepository';
 import RedisPubSub from '../infra/redisPubSub';
 import JwtTokenVerifier from '../infra/JwtTokenVerifier';
+import { GameFeature } from '../game/GameFeature';
 import { log } from '../observability/logger';
 import { PlayerEvent } from '../types/events';
 import { GameSocket, IncomingMessagePayload } from '../types/websocket';
@@ -21,8 +21,6 @@ import RoomRegistry from './RoomRegistry';
 interface GameSocketServerOptions {
   server: HttpServer;
   heartbeatIntervalMs: number;
-  deductWallet: WalletDeductHandler;
-  creditWallet: WalletCreditHandler;
   pubSub: RedisPubSub;
   gamePlayerDataRepository: GamePlayerDataRepository;
   currentRoundRepository: CurrentRoundRepository;
@@ -30,8 +28,8 @@ interface GameSocketServerOptions {
   roomMembershipRepository: RoomMembershipRepository;
   roundActionRepository: RoundActionRepository;
   roundRepository: RoundRepository;
-  spinRepository: SpinRepository;
   tokenVerifier: JwtTokenVerifier;
+  features?: GameFeature[];
   serverId: string;
 }
 
@@ -46,8 +44,6 @@ class GameSocketServer {
     const {
       server,
       heartbeatIntervalMs,
-      deductWallet,
-      creditWallet,
       pubSub,
       gamePlayerDataRepository,
       currentRoundRepository,
@@ -55,8 +51,8 @@ class GameSocketServer {
       roomMembershipRepository,
       roundActionRepository,
       roundRepository,
-      spinRepository,
       tokenVerifier,
+      features = [],
       serverId
     } = options;
 
@@ -64,8 +60,6 @@ class GameSocketServer {
     this.heartbeat = new Heartbeat(this.wss, heartbeatIntervalMs);
     this.pubSub = pubSub;
     this.actions = new GameActions(
-      deductWallet,
-      creditWallet,
       pubSub,
       serverId,
       gamePlayerDataRepository,
@@ -74,8 +68,8 @@ class GameSocketServer {
       roomMembershipRepository,
       roundActionRepository,
       roundRepository,
-      spinRepository,
-      tokenVerifier
+      tokenVerifier,
+      features
     );
   }
 

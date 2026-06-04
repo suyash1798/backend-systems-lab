@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { chessMoveSchema } from '../features/chess/messageSchema';
+import { spinSchema } from '../features/slot/messageSchema';
 import { IncomingMessagePayload } from '../types/websocket';
 
 const joinSchema = z.object({
@@ -6,14 +8,6 @@ const joinSchema = z.object({
   requestId: z.string().min(1),
   roomId: z.string().min(1),
   token: z.string().min(1)
-});
-
-const spinSchema = z.object({
-  action: z.literal('spin'),
-  requestId: z.string().min(1),
-  gameId: z.string().min(1),
-  spinId: z.string().min(1),
-  betAmount: z.number().positive()
 });
 
 const endRoundSchema = z.object({
@@ -32,7 +26,8 @@ const messageSchema = z.discriminatedUnion('action', [
   joinSchema,
   spinSchema,
   endRoundSchema,
-  persistentDataSchema
+  persistentDataSchema,
+  chessMoveSchema
 ]);
 
 export function validateMessage(payload: unknown): IncomingMessagePayload {

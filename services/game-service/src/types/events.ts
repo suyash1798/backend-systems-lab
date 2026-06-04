@@ -1,4 +1,5 @@
 export interface PlayerEvent {
+  [key: string]: unknown;
   type: 'player_joined' | 'player_action';
   userId: string;
   roomId: string;

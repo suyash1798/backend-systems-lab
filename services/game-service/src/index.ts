@@ -9,7 +9,8 @@ import RoundRepository from './repositories/RoundRepository';
 import RoundActionRepository from './repositories/RoundActionRepository';
 import RoomMembershipRepository from './repositories/RoomMembershipRepository';
 import OutboxRepository from './repositories/OutboxRepository';
-import SpinRepository from './repositories/SpinRepository';
+import { ChessRepository, createChessFeature } from './features/chess';
+import { SpinRepository, createSlotFeature } from './features/slot';
 import DynamoDbClient from './infra/DynamoDbClient';
 import RedisKeyValueClient from './infra/RedisKeyValueClient';
 import RedisPubSub from './infra/redisPubSub';
@@ -44,6 +45,7 @@ class GameServiceApp {
   private readonly roomMembershipRepository = new RoomMembershipRepository(this.prisma);
   private readonly outboxRepository = new OutboxRepository(this.prisma);
   private readonly spinRepository = new SpinRepository(this.prisma);
+  private readonly chessRepository = new ChessRepository(this.prisma);
   private readonly outboxPublisher = new OutboxPublisher(this.outboxRepository, this.kafkaProducer);
   private readonly idempotencyRepository = new IdempotencyRepository(
     this.redisKeyValue,
@@ -68,8 +70,6 @@ class GameServiceApp {
     this.gameSocketServer = new GameSocketServer({
       server: this.httpServer,
       heartbeatIntervalMs: Number(config.heartbeatIntervalMs),
-      deductWallet: (request) => this.walletClient.deduct(request),
-      creditWallet: (request) => this.walletClient.credit(request),
       pubSub: this.pubSub,
       gamePlayerDataRepository: this.gamePlayerDataRepository,
       currentRoundRepository: this.currentRoundRepository,
@@ -77,8 +77,23 @@ class GameServiceApp {
       roomMembershipRepository: this.roomMembershipRepository,
       roundActionRepository: this.roundActionRepository,
       roundRepository: this.roundRepository,
-      spinRepository: this.spinRepository,
       tokenVerifier: this.tokenVerifier,
+      features: [
+        createSlotFeature({
+          deductWallet: (request) => this.walletClient.deduct(request),
+          creditWallet: (request) => this.walletClient.credit(request),
+          currentRoundRepository: this.currentRoundRepository,
+          roundRepository: this.roundRepository,
+          spinRepository: this.spinRepository,
+          pubSub: this.pubSub,
+          serverId: config.serverId
+        }),
+        createChessFeature({
+          repository: this.chessRepository,
+          pubSub: this.pubSub,
+          serverId: config.serverId
+        })
+      ],
       serverId: config.serverId
     });
 

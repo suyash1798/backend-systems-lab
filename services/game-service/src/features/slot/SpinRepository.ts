@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { PrismaClient } from '@prisma/client';
-import { CompletedSpin, PendingSpin, SpinIntent } from '../game/models/Spin';
+import { CompletedSpin, PendingSpin, SpinIntent } from './types';
 
 class SpinRepository {
   constructor(private readonly prisma: PrismaClient) {}

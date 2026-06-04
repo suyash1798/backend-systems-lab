@@ -3,26 +3,16 @@ import {
   IncomingMessagePayload,
   GameSocket,
   JoinPayload,
-  PersistentDataPayload,
-  SpinPayload
+  PersistentDataPayload
 } from '../types/websocket';
-
-interface IdempotencyContext {
-  activeRoundId?: (userId: string, roomId: string) => Promise<string | null> | string | null;
-}
 
 class Idempotency {
   public async key(
     ws: GameSocket,
-    payload: IncomingMessagePayload,
-    context: IdempotencyContext = {}
+    payload: IncomingMessagePayload
   ): Promise<string | null> {
     if (payload.action === 'join') {
       return this.joinKey(payload);
-    }
-
-    if (payload.action === 'spin') {
-      return this.spinKey(ws, payload, context);
     }
 
     if (payload.action === 'end_round') {
@@ -44,26 +34,6 @@ class Idempotency {
     return `join:${payload.userId}:${payload.roomId}:${payload.requestId}`;
   }
 
-  private async spinKey(
-    ws: GameSocket,
-    payload: SpinPayload,
-    context: IdempotencyContext
-  ): Promise<string | null> {
-    const { userId, roomId } = ws;
-
-    if (!userId || !roomId) {
-      return null;
-    }
-
-    const roundId = await context.activeRoundId?.(userId, roomId);
-
-    if (!roundId) {
-      return null;
-    }
-
-    return `spin:${roundId}:${payload.spinId}`;
-  }
-
   private endRoundKey(ws: GameSocket, payload: EndRoundPayload): string | null {
     if (!payload.requestId || !ws.userId || !ws.roomId) {
       return null;
@@ -79,6 +49,7 @@ class Idempotency {
 
     return `persistent-data:${ws.userId}:${payload.gameId}:${payload.requestId}`;
   }
+
 }
 
 export default Idempotency;

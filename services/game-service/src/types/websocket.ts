@@ -1,4 +1,6 @@
 import { WebSocket } from 'ws';
+import { ChessMovePayload } from '../features/chess/types';
+import { SpinPayload } from '../features/slot/types';
 
 export interface GameSocket extends WebSocket {
   id: string;
@@ -17,14 +19,6 @@ export interface JoinPayload {
   userId?: string;
 }
 
-export interface SpinPayload {
-  action: 'spin';
-  requestId: string;
-  gameId: string;
-  spinId: string;
-  betAmount: number;
-}
-
 export interface EndRoundPayload {
   action: 'end_round';
   requestId: string;
@@ -41,6 +35,7 @@ export type IncomingMessagePayload =
   | JoinPayload
   | SpinPayload
   | EndRoundPayload
-  | PersistentDataPayload;
+  | PersistentDataPayload
+  | ChessMovePayload;
 
 export type OutgoingPayload = Record<string, unknown>;

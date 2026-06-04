@@ -1,15 +1,7 @@
 import RedisPubSub from '../infra/redisPubSub';
 import RequestLogger from '../observability/RequestLogger';
-import {
-  EndRoundPayload,
-  IncomingMessagePayload,
-  GameSocket,
-  JoinPayload,
-  PersistentDataPayload,
-  SpinPayload
-} from '../types/websocket';
+import { IncomingMessagePayload, GameSocket } from '../types/websocket';
 import JoinAction from './actions/joinAction';
-import SpinAction from './actions/spinAction';
 import EndRoundAction from './actions/endRoundAction';
 import PersistentDataAction from './actions/persistentDataAction';
 import ActionExecutor from './actions/ActionExecutor';
@@ -22,35 +14,27 @@ import IdempotencyRepository from '../repositories/IdempotencyRepository';
 import Idempotency from './idempotency';
 import RoundActionRepository from '../repositories/RoundActionRepository';
 import RoundRepository from '../repositories/RoundRepository';
-import SpinRepository from '../repositories/SpinRepository';
 import RoomMembershipRepository from '../repositories/RoomMembershipRepository';
 import GamePlayerDataService from './services/GamePlayerDataService';
 import RoundService from './services/RoundService';
-import SpinService from './services/SpinService';
 import JwtTokenVerifier from '../infra/JwtTokenVerifier';
-import {
-  ActionContext,
-  RequestTrace,
-  WalletCreditHandler,
-  WalletDeductHandler
-} from './actions/types';
+import { GameFeature } from './GameFeature';
+import { ActionContext, RequestTrace } from './actions/types';
 
-export { WalletCreditHandler, WalletDeductHandler };
+type ActionHandlers = {
+  [Action in IncomingMessagePayload['action']]: GameActionHandler<
+    Extract<IncomingMessagePayload, { action: Action }>
+  >;
+};
 
 class GameActions {
   private readonly context: ActionContext;
   private readonly idempotency: Idempotency;
   private readonly executor: ActionExecutor;
-  private readonly handlers: {
-    join: GameActionHandler<JoinPayload>;
-    spin: GameActionHandler<SpinPayload>;
-    end_round: GameActionHandler<EndRoundPayload>;
-    persistent_data: GameActionHandler<PersistentDataPayload>;
-  };
+  private readonly handlers: ActionHandlers;
+  private readonly features: GameFeature[];
 
   constructor(
-    deductWallet: WalletDeductHandler,
-    creditWallet: WalletCreditHandler,
     pubSub: RedisPubSub,
     serverId: string,
     gamePlayerDataRepository: GamePlayerDataRepository,
@@ -59,36 +43,32 @@ class GameActions {
     roomMembershipRepository: RoomMembershipRepository,
     roundActionRepository: RoundActionRepository,
     roundRepository: RoundRepository,
-    spinRepository: SpinRepository,
     private readonly tokenVerifier: JwtTokenVerifier,
+    features: GameFeature[] = [],
     logger = new RequestLogger(),
     responder = new GameResponseSender(),
     idempotency = new Idempotency()
   ) {
     this.idempotency = idempotency;
+    this.features = features;
+
     this.context = {
       gamePlayerDataService: new GamePlayerDataService(gamePlayerDataRepository),
       publisher: new GameEventPublisher(pubSub, serverId),
       idempotencyRepository,
       roomMembershipRepository,
       roundService: new RoundService(currentRoundRepository, roundRepository, roundActionRepository),
-      spinService: new SpinService(
-        deductWallet,
-        creditWallet,
-        currentRoundRepository,
-        roundRepository,
-        spinRepository
-      ),
+      roomStateProviders: features.flatMap((feature) => feature.roomStateProviders || []),
       logger,
       responder
     };
     this.executor = new ActionExecutor(this.context);
-    this.handlers = {
+    this.handlers = ({
       join: new JoinAction(this.context),
-      spin: new SpinAction(this.context),
       end_round: new EndRoundAction(this.context),
-      persistent_data: new PersistentDataAction(this.context)
-    };
+      persistent_data: new PersistentDataAction(this.context),
+      ...this.featureHandlers(features)
+    } as unknown) as ActionHandlers;
   }
 
   async handle(ws: GameSocket, payload: IncomingMessagePayload): Promise<void> {
@@ -101,6 +81,12 @@ class GameActions {
     }
 
     const handler = this.handlers[payload.action] as GameActionHandler<IncomingMessagePayload>;
+
+    if (!handler) {
+      this.context.responder.error(ws, 'unsupported action', payload.requestId);
+      return;
+    }
+
     const idempotencyKey = await this.idempotencyKey(ws, payload);
     const trace = this.trace(ws, payload, idempotencyKey);
 
@@ -120,12 +106,13 @@ class GameActions {
     ws: GameSocket,
     payload: IncomingMessagePayload
   ): Promise<string | null> {
-    return this.idempotency.key(ws, payload, {
-      activeRoundId: async (userId, roomId) => {
-        const round = await this.context.spinService.activeRound(userId, roomId);
-        return round.roundId;
-      }
-    });
+    const featureKey = await this.featureFor(payload.action)?.idempotencyKey?.(ws, payload);
+
+    if (featureKey !== undefined) {
+      return featureKey;
+    }
+
+    return this.idempotency.key(ws, payload);
   }
 
   private trace(
@@ -161,17 +148,7 @@ class GameActions {
   }
 
   private hasConflict(payload: IncomingMessagePayload, response?: object): boolean {
-    if (payload.action !== 'spin' || !response) {
-      return false;
-    }
-
-    const spin = response as { betAmount?: number; gameId?: string; spinId?: string };
-
-    return (
-      spin.betAmount !== payload.betAmount ||
-      spin.gameId !== payload.gameId ||
-      spin.spinId !== payload.spinId
-    );
+    return this.featureFor(payload.action)?.hasConflict?.(payload, response) || false;
   }
 
   private payloadUserId(payload: IncomingMessagePayload): string | null {
@@ -180,6 +157,17 @@ class GameActions {
 
   private payloadRoomId(payload: IncomingMessagePayload): string | null {
     return payload.action === 'join' ? payload.roomId : null;
+  }
+
+  private featureHandlers(features: GameFeature[]): Record<string, GameActionHandler<any>> {
+    return features.reduce(
+      (handlers, feature) => ({ ...handlers, ...feature.handlers }),
+      {}
+    );
+  }
+
+  private featureFor(action: string): GameFeature | undefined {
+    return this.features.find((feature) => Boolean(feature.handlers[action]));
   }
 }
 

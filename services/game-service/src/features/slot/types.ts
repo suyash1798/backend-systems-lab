@@ -1,3 +1,11 @@
+export interface SpinPayload {
+  action: 'spin';
+  requestId: string;
+  gameId: string;
+  spinId: string;
+  betAmount: number;
+}
+
 export interface SpinIntent {
   userId: string;
   roomId: string;

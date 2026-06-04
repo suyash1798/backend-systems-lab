@@ -5,7 +5,7 @@ import IdempotencyRepository from '../../repositories/IdempotencyRepository';
 import RoomMembershipRepository from '../../repositories/RoomMembershipRepository';
 import GamePlayerDataService from '../services/GamePlayerDataService';
 import RoundService from '../services/RoundService';
-import SpinService from '../services/SpinService';
+import { RoomStateProvider } from '../RoomStateProvider';
 import { WalletCreditRequest, WalletDeductRequest, WalletResponse } from '../../types/wallet';
 
 export type WalletDeductHandler = (request: WalletDeductRequest) => Promise<WalletResponse>;
@@ -26,7 +26,7 @@ export interface ActionContext {
   idempotencyRepository: IdempotencyRepository;
   roomMembershipRepository: RoomMembershipRepository;
   roundService: RoundService;
-  spinService: SpinService;
+  roomStateProviders: RoomStateProvider[];
   logger: RequestLogger;
   responder: GameResponseSender;
 }

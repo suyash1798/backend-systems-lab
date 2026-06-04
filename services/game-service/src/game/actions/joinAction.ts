@@ -21,7 +21,17 @@ class JoinAction implements GameActionHandler<JoinPayload> {
     ws.roomId = roomId;
 
     const roundHistory = await this.context.roundService.history(userId, roomId);
-    return { status: 'ok', action: 'joined', userId, roomId, requestId, roundHistory };
+    const roomState = await this.roomState(userId, roomId);
+
+    return {
+      status: 'ok',
+      action: 'joined',
+      userId,
+      roomId,
+      requestId,
+      roundHistory,
+      roomState
+    };
   }
 
   async onSuccess(ws: GameSocket, payload: JoinPayload, _response: object, trace: RequestTrace): Promise<void> {
@@ -32,6 +42,16 @@ class JoinAction implements GameActionHandler<JoinPayload> {
     } catch (err) {
       this.context.logger.redisPublishFailed(trace, err as Error);
     }
+  }
+
+  private async roomState(userId: string, roomId: string): Promise<Record<string, unknown>> {
+    const state: Record<string, unknown> = {};
+
+    for (const provider of this.context.roomStateProviders) {
+      state[provider.key] = await provider.state(userId, roomId);
+    }
+
+    return state;
   }
 }
 

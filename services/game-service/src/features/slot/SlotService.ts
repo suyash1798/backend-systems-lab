@@ -1,8 +1,8 @@
 import CurrentRoundRepository from '../../repositories/CurrentRoundRepository';
 import RoundRepository from '../../repositories/RoundRepository';
-import SpinRepository from '../../repositories/SpinRepository';
-import { WalletCreditHandler, WalletDeductHandler } from '../actions/types';
-import { ActiveRound } from '../models/Round';
+import { WalletCreditHandler, WalletDeductHandler } from '../../game/actions/types';
+import { ActiveRound } from '../../game/models/Round';
+import SpinRepository from './SpinRepository';
 
 const symbols = ['CHERRY', 'LEMON', 'BELL', 'SEVEN'];
 
@@ -33,7 +33,7 @@ export interface SpinResponse {
   }[];
 }
 
-class SpinService {
+class SlotService {
   constructor(
     private readonly deductWallet: WalletDeductHandler,
     private readonly creditWallet: WalletCreditHandler,
@@ -217,4 +217,4 @@ class SpinService {
   }
 }
 
-export default SpinService;
+export default SlotService;
