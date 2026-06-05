@@ -1,9 +1,17 @@
 FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
+WORKDIR /repo
 RUN apk add --no-cache openssl
-RUN npm ci || npm ci
-COPY . .
-RUN npx prisma generate
+
+COPY packages/game-gdk/package*.json packages/game-gdk/
+RUN npm install --prefix packages/game-gdk
+COPY packages/game-gdk packages/game-gdk
+RUN npm run build --prefix packages/game-gdk
+
+COPY services/game-service/package*.json services/game-service/
+RUN npm install --prefix services/game-service
+COPY services/game-service services/game-service
+
+WORKDIR /repo/services/game-service
+RUN npx prisma generate --schema prisma/schema
 EXPOSE 3000 9229
 CMD ["npm", "run", "start:debug"]

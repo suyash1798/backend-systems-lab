@@ -100,8 +100,8 @@ services:
 
   game-service:
     build:
-      context: ./services/game-service
-      dockerfile: Dockerfile.debug
+      context: .
+      dockerfile: services/game-service/Dockerfile.debug
     command: npm run start:debug
     ports:
       - "3000:3000"

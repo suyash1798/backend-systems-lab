@@ -1,7 +1,7 @@
+import { GameActionHandler } from '@trying-sd/game-gdk';
 import AppError from '../../errors/AppError';
 import { EndRoundPayload, GameSocket } from '../../types/websocket';
 import { EndRoundResponse } from '../services/RoundService';
-import { GameActionHandler } from './GameActionHandler';
 import { ActionContext } from '../types';
 
 class EndRoundAction implements GameActionHandler<EndRoundPayload> {

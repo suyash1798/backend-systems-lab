@@ -1,11 +1,11 @@
-import { GameSocket } from '../types/websocket';
+import { GameSocket } from './types';
 
 class ResponseSender {
   ok(ws: GameSocket, payload: object): void {
     this.send(ws, { status: 'ok', ...payload });
   }
 
-  error(ws: GameSocket, error: string, requestId?: string, detail?: unknown): void {
+  error(ws: GameSocket, error: string, requestId?: string | null, detail?: unknown): void {
     this.send(ws, { status: 'error', error, detail, requestId });
   }
 

@@ -1,7 +1,10 @@
 import { Server as HttpServer } from 'http';
 import { PrismaClient } from '@prisma/client';
+import { WebSocketHost } from '@trying-sd/game-gdk';
 import config from './config';
 import { createApp } from './http';
+import Actions from './game/Actions';
+import { validateMessage } from './game/messageSchema';
 import CurrentRoundRepository from './repositories/CurrentRoundRepository';
 import GamePlayerDataRepository from './repositories/GamePlayerDataRepository';
 import IdempotencyRepository from './repositories/IdempotencyRepository';
@@ -18,7 +21,8 @@ import KafkaEventProducer from './infra/KafkaEventProducer';
 import JwtTokenVerifier from './infra/JwtTokenVerifier';
 import WalletClient from './services/walletClient';
 import OutboxPublisher from './services/OutboxPublisher';
-import GameSocketServer from './websocket/GameSocketServer';
+import { log } from './observability/logger';
+import { IncomingMessagePayload } from './types/websocket';
 
 class GameServiceApp {
   private readonly walletClient = new WalletClient(config.walletUrl);
@@ -52,7 +56,7 @@ class GameServiceApp {
     Number(config.idempotencyTtlSeconds)
   );
   private httpServer: HttpServer | null = null;
-  private gameSocketServer: GameSocketServer | null = null;
+  private webSocketHost: WebSocketHost<IncomingMessagePayload> | null = null;
   private stopping = false;
 
   async start(): Promise<void> {
@@ -67,18 +71,17 @@ class GameServiceApp {
       () => console.log(`game-service listening on ${config.port}`)
     );
 
-    this.gameSocketServer = new GameSocketServer({
-      server: this.httpServer,
-      heartbeatIntervalMs: Number(config.heartbeatIntervalMs),
-      pubSub: this.pubSub,
-      gamePlayerDataRepository: this.gamePlayerDataRepository,
-      currentRoundRepository: this.currentRoundRepository,
-      idempotencyRepository: this.idempotencyRepository,
-      roomMembershipRepository: this.roomMembershipRepository,
-      roundActionRepository: this.roundActionRepository,
-      roundRepository: this.roundRepository,
-      tokenVerifier: this.tokenVerifier,
-      features: [
+    const actions = new Actions(
+      this.pubSub,
+      config.serverId,
+      this.gamePlayerDataRepository,
+      this.currentRoundRepository,
+      this.idempotencyRepository,
+      this.roomMembershipRepository,
+      this.roundActionRepository,
+      this.roundRepository,
+      this.tokenVerifier,
+      [
         createSlotFeature({
           deductWallet: (request) => this.walletClient.deduct(request),
           creditWallet: (request) => this.walletClient.credit(request),
@@ -93,11 +96,19 @@ class GameServiceApp {
           pubSub: this.pubSub,
           serverId: config.serverId
         })
-      ],
-      serverId: config.serverId
+      ]
+    );
+
+    this.webSocketHost = new WebSocketHost({
+      server: this.httpServer,
+      heartbeatIntervalMs: Number(config.heartbeatIntervalMs),
+      pubSub: this.pubSub,
+      validateMessage,
+      router: actions,
+      logger: { log }
     });
 
-    this.gameSocketServer.start();
+    this.webSocketHost.start();
     this.outboxPublisher.start();
     this.registerShutdownHooks();
   }
@@ -108,7 +119,7 @@ class GameServiceApp {
     }
 
     this.stopping = true;
-    this.gameSocketServer?.stop();
+    this.webSocketHost?.stop();
     this.outboxPublisher.stop();
     await this.pubSub.close();
     await this.kafkaProducer.close();

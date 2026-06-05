@@ -1,7 +1,12 @@
-import AppError from '../../errors/AppError';
-import { GameSocket, IncomingMessagePayload } from '../../types/websocket';
-import { GameActionHandler } from './GameActionHandler';
-import { ActionContext, RequestTrace } from '../types';
+import {
+  GameActionHandler,
+  GameSocket,
+  IdempotencyStore,
+  IncomingMessagePayload,
+  RequestLogger,
+  RequestTrace,
+  ResponseSender
+} from '../types';
 
 interface ExecuteOptions<TPayload extends IncomingMessagePayload> {
   ws: GameSocket;
@@ -14,8 +19,14 @@ interface ExecuteOptions<TPayload extends IncomingMessagePayload> {
   onDuplicateResponse?: (response: object) => void;
 }
 
+interface ActionExecutorContext {
+  idempotencyRepository: IdempotencyStore;
+  logger: RequestLogger;
+  responder: ResponseSender;
+}
+
 class ActionExecutor {
-  constructor(private readonly context: ActionContext) {}
+  constructor(private readonly context: ActionExecutorContext) {}
 
   async execute<TPayload extends IncomingMessagePayload>({
     ws,
@@ -171,13 +182,15 @@ class ActionExecutor {
     startedAt: number,
     err: unknown
   ): void {
-    const appErr = err instanceof AppError ? err : new AppError((err as Error).message);
-    this.context.logger.failed(trace, startedAt, appErr.message, {
-      status: appErr.status,
-      source: appErr.source,
-      detail: appErr.detail
+    const error = err as { message?: string; status?: number; source?: string; detail?: unknown };
+    const message = error.message || 'request failed';
+
+    this.context.logger.failed(trace, startedAt, message, {
+      status: error.status || 500,
+      source: error.source,
+      detail: error.detail
     });
-    this.context.responder.error(ws, appErr.message, payload.requestId, appErr.detail);
+    this.context.responder.error(ws, message, payload.requestId, error.detail);
   }
 }
 

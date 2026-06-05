@@ -1,6 +1,5 @@
 import { WebSocket } from 'ws';
-import { PlayerEvent } from '../types/events';
-import { GameSocket } from '../types/websocket';
+import { GameSocket, RoomEvent } from '../types';
 
 class RoomRegistry {
   private readonly rooms = new Map<string, Set<GameSocket>>();
@@ -37,7 +36,7 @@ class RoomRegistry {
     });
   }
 
-  notify(event: PlayerEvent): void {
+  notify(event: RoomEvent): void {
     const clients = this.rooms.get(event.roomId);
 
     if (!clients) {

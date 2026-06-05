@@ -1,15 +1,8 @@
-import { WebSocket } from 'ws';
+import type { GameSocket } from '@trying-sd/game-gdk';
 import { ChessMovePayload } from '../features/chess/types';
 import { SpinPayload } from '../features/slot/types';
 
-export interface GameSocket extends WebSocket {
-  id: string;
-  isAlive: boolean;
-  roomId: string | null;
-  userId: string | null;
-  processedRequests: Map<string, object>;
-  pendingRequests: Set<string>;
-}
+export type { GameSocket };
 
 export interface JoinPayload {
   action: 'join';

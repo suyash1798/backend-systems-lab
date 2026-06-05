@@ -1,8 +1,6 @@
+import { GameActionHandler, GameSocket, RequestTrace } from '@trying-sd/game-gdk';
 import AppError from '../../errors/AppError';
 import RequestLogger from '../../observability/RequestLogger';
-import { GameActionHandler } from '../../game/actions/GameActionHandler';
-import { RequestTrace } from '../../game/types';
-import { GameSocket } from '../../types/websocket';
 import EventPublisher from './EventPublisher';
 import Service, { SpinResponse } from './Service';
 import { SpinPayload } from './types';

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build:gdk": "npm run build --prefix ../../packages/game-gdk",
+    "build": "npm run build:gdk && tsc",
     "db:migrate": "prisma migrate deploy --schema prisma/schema",
     "db:push": "prisma db push --schema prisma/schema",
     "db:seed": "prisma db seed --schema prisma/schema",
@@ -17,6 +18,7 @@
     "seed": "ts-node prisma/seed/index.ts"
   },
   "dependencies": {
+    "@trying-sd/game-gdk": "file:../../packages/game-gdk",
     "@aws-sdk/client-dynamodb": "^3.1054.0",
     "@aws-sdk/lib-dynamodb": "^3.1054.0",
     "@prisma/client": "^5.22.0",

@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/.venv
+.git
+.github
+.postman
+.vscode
+postman/flows
+*.log
