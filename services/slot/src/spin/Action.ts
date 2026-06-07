@@ -1,13 +1,12 @@
 import {
   GameActionHandler,
-  GameError,
   GameRuntimeContext,
   GameSocket,
-  RequestTrace
+  RequestTrace,
+  requireJoined
 } from '@trying-sd/game-gdk';
-import SpinService, { SpinResponse } from './SpinService';
-import { SpinPayload } from './types';
-import { SlotEvent } from '../contracts';
+import SpinService, { SpinResponse } from './Service';
+import { SlotEvent, SpinPayload } from './types';
 
 class SpinAction implements GameActionHandler<SpinPayload> {
   constructor(
@@ -17,11 +16,7 @@ class SpinAction implements GameActionHandler<SpinPayload> {
 
   async handle(ws: GameSocket, payload: SpinPayload): Promise<SpinResponse> {
     const { requestId, gameId, spinId, betAmount } = payload;
-    const { userId, roomId } = ws;
-
-    if (!userId || !roomId) {
-      throw new GameError('join required', 400);
-    }
+    const { userId, roomId } = requireJoined(ws);
 
     const request = {
       userId,
@@ -56,6 +51,16 @@ class SpinAction implements GameActionHandler<SpinPayload> {
     } catch (err) {
       this.game.logger.redisPublishFailed?.(trace, err as Error);
     }
+  }
+
+  async duplicateKey(ws: GameSocket, payload: SpinPayload): Promise<string | null> {
+    if (!ws.userId || !ws.roomId) {
+      return null;
+    }
+
+    const round = await this.game.rounds.activeOrCreate(ws.userId, ws.roomId);
+
+    return `spin:${round.roundId}:${payload.spinId}`;
   }
 }
 

@@ -5,6 +5,7 @@ import type {
   RequestTrace,
   ResponseSender
 } from '../types';
+import type { z } from 'zod';
 
 export interface JoinPayload {
   action: 'join';
@@ -163,12 +164,8 @@ export interface GameRuntimeContext<TEvent = unknown> {
 
 export interface GameFeature<TPayload extends { action: string } = any> {
   handlers: Record<string, GameActionHandler<any>>;
+  schemas?: readonly z.ZodType<TPayload>[];
   roomStateProviders?: RoomStateProvider[];
-  idempotencyKey?: (
-    ws: GameSocket,
-    payload: TPayload
-  ) => Promise<string | null | undefined> | string | null | undefined;
-  hasConflict?: (payload: TPayload, response?: object) => boolean;
 }
 
 export interface GameActionContext {

@@ -27,7 +27,7 @@ const defaultSchemas = [
 ] as const;
 
 export function createMessageValidator<TPayload extends IncomingMessagePayload>(
-  featureSchemas: [z.ZodType, ...z.ZodType[]]
+  featureSchemas: readonly [z.ZodType, ...z.ZodType[]]
 ): (payload: unknown) => TPayload {
   const schemas = [
     ...defaultSchemas,

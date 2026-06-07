@@ -45,7 +45,7 @@ export type GameEventMessage<TFeatureEvent extends PlayerActionEvent> =
 export interface RequestTrace {
   action: string;
   requestId?: string | null;
-  idempotencyKey?: string | null;
+  duplicateKey?: string | null;
   connectionId: string;
   userId?: string | null;
   roomId?: string | null;
@@ -80,6 +80,10 @@ export interface ResponseSender {
 }
 
 export interface GameActionHandler<TPayload extends IncomingMessagePayload> {
+  duplicateKey?(
+    ws: GameSocket,
+    payload: TPayload
+  ): Promise<string | null | undefined> | string | null | undefined;
   handle(ws: GameSocket, payload: TPayload): Promise<object>;
   onSuccess?(
     ws: GameSocket,

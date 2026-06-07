@@ -13,9 +13,8 @@ interface ExecuteOptions<TPayload extends IncomingMessagePayload> {
   payload: TPayload;
   trace: RequestTrace;
   startedAt: number;
-  idempotencyKey: string | null;
+  duplicateKey: string | null;
   handler: GameActionHandler<TPayload>;
-  hasConflict?: (response?: object) => boolean;
   onDuplicateResponse?: (response: object) => void;
 }
 
@@ -33,9 +32,8 @@ class ActionExecutor {
     payload,
     trace,
     startedAt,
-    idempotencyKey,
+    duplicateKey,
     handler,
-    hasConflict,
     onDuplicateResponse
   }: ExecuteOptions<TPayload>): Promise<void> {
     const duplicateHandled = await this.handleDuplicate({
@@ -43,8 +41,7 @@ class ActionExecutor {
       payload,
       trace,
       startedAt,
-      idempotencyKey,
-      hasConflict,
+      duplicateKey,
       onDuplicateResponse
     });
 
@@ -52,14 +49,14 @@ class ActionExecutor {
       return;
     }
 
-    if (idempotencyKey && !await this.context.idempotencyRepository.reserve(idempotencyKey)) {
+    if (duplicateKey && !await this.context.idempotencyRepository.reserve(duplicateKey)) {
       this.context.logger.duplicatePending(trace, startedAt);
       this.context.responder.pending(ws, payload.requestId);
       return;
     }
 
-    if (idempotencyKey) {
-      ws.pendingRequests.add(idempotencyKey);
+    if (duplicateKey) {
+      ws.pendingRequests.add(duplicateKey);
     }
 
     this.context.logger.started(trace);
@@ -67,17 +64,17 @@ class ActionExecutor {
     try {
       const response = await handler.handle(ws, payload);
 
-      await this.remember(ws, idempotencyKey, response);
+      await this.remember(ws, duplicateKey, response);
       this.context.responder.ok(ws, response);
       this.context.logger.completed(trace, startedAt);
 
       await this.onSuccess(handler, ws, payload, response, trace);
     } catch (err) {
-      await this.release(idempotencyKey);
+      await this.release(duplicateKey);
       this.fail(ws, payload, trace, startedAt, err);
     } finally {
-      if (idempotencyKey) {
-        ws.pendingRequests.delete(idempotencyKey);
+      if (duplicateKey) {
+        ws.pendingRequests.delete(duplicateKey);
       }
     }
   }
@@ -87,34 +84,27 @@ class ActionExecutor {
     payload,
     trace,
     startedAt,
-    idempotencyKey,
-    hasConflict,
+    duplicateKey,
     onDuplicateResponse
   }: Omit<ExecuteOptions<TPayload>, 'handler'>): Promise<boolean> {
-    if (!idempotencyKey) {
+    if (!duplicateKey) {
       return false;
     }
 
-    if (ws.processedRequests.has(idempotencyKey)) {
-      this.sendDuplicate(ws, trace, startedAt, ws.processedRequests.get(idempotencyKey) || {}, onDuplicateResponse);
+    if (ws.processedRequests.has(duplicateKey)) {
+      this.sendDuplicate(ws, trace, startedAt, ws.processedRequests.get(duplicateKey) || {}, onDuplicateResponse);
       return true;
     }
 
-    if (ws.pendingRequests.has(idempotencyKey)) {
+    if (ws.pendingRequests.has(duplicateKey)) {
       this.context.logger.duplicatePending(trace, startedAt);
       this.context.responder.pending(ws, payload.requestId);
       return true;
     }
 
-    const stored = await this.context.idempotencyRepository.get(idempotencyKey);
+    const stored = await this.context.idempotencyRepository.get(duplicateKey);
 
     if (stored?.status === 'completed') {
-      if (hasConflict?.(stored.response)) {
-        this.context.logger.failed(trace, startedAt, 'idempotency conflict');
-        this.context.responder.error(ws, 'idempotency conflict', payload.requestId);
-        return true;
-      }
-
       this.sendDuplicate(ws, trace, startedAt, stored.response || {}, onDuplicateResponse);
       return true;
     }

@@ -1,6 +1,6 @@
 import { ActiveRound, GameRuntimeContext } from '@trying-sd/game-gdk';
-import SpinRepository from './SpinRepository';
-import { SlotEvent } from '../contracts';
+import SpinRepository from './Repository';
+import { SlotEvent } from './types';
 
 const symbols = ['CHERRY', 'LEMON', 'BELL', 'SEVEN'];
 

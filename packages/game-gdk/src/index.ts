@@ -8,6 +8,7 @@ export { default as CurrentRoundRepository } from './runtime/repositories/Curren
 export { default as IdempotencyRepository } from './runtime/repositories/IdempotencyRepository';
 export { default as RoundService } from './runtime/services/RoundService';
 export { default as ResponseSender } from './ResponseSender';
+export { requireJoined } from './runtime/connection';
 export {
   createMessageValidator,
   endRoundSchema,
@@ -52,5 +53,6 @@ export type {
   TokenVerifier,
   WalletService
 } from './runtime/types';
+export type { JoinedPlayer } from './runtime/connection';
 export type { GameEventPublisher } from './runtime/GameEvents';
 export type { KeyValueStore } from './runtime/repositories/CurrentRoundRepository';

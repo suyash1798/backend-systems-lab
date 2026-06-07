@@ -5,6 +5,10 @@ import { GameActionContext, JoinPayload } from '../types';
 class JoinAction implements GameActionHandler<JoinPayload> {
   constructor(private readonly context: GameActionContext) {}
 
+  duplicateKey(_ws: GameSocket, payload: JoinPayload): string {
+    return `join:${payload.userId || 'unknown'}:${payload.roomId}:${payload.requestId}`;
+  }
+
   async handle(ws: GameSocket, payload: JoinPayload): Promise<object> {
     const { userId, roomId, requestId } = payload;
 
