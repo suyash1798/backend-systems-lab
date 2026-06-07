@@ -22,6 +22,18 @@ interface ActionExecutorContext {
   idempotencyRepository: IdempotencyStore;
   logger: RequestLogger;
   responder: ResponseSender;
+  roundService: {
+    recordActionIfActive(
+      userId: string,
+      roomId: string,
+      action: {
+        action: string;
+        requestId: string;
+        payload: Record<string, unknown>;
+        result?: Record<string, unknown>;
+      }
+    ): Promise<void>;
+  };
 }
 
 class ActionExecutor {
@@ -64,6 +76,7 @@ class ActionExecutor {
     try {
       const response = await handler.handle(ws, payload);
 
+      await this.recordRecoveryAction(ws, payload, response);
       await this.remember(ws, duplicateKey, response);
       this.context.responder.ok(ws, response);
       this.context.logger.completed(trace, startedAt);
@@ -163,6 +176,23 @@ class ActionExecutor {
     } catch (err) {
       console.error('action success side effect failed', (err as Error).message);
     }
+  }
+
+  private async recordRecoveryAction(
+    ws: GameSocket,
+    payload: IncomingMessagePayload,
+    response: object
+  ): Promise<void> {
+    if (payload.action === 'join' || !ws.userId || !ws.roomId || !payload.requestId) {
+      return;
+    }
+
+    await this.context.roundService.recordActionIfActive(ws.userId, ws.roomId, {
+      action: payload.action,
+      requestId: payload.requestId,
+      payload: payload as unknown as Record<string, unknown>,
+      result: response as Record<string, unknown>
+    });
   }
 
   private fail(

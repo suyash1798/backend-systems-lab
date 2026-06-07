@@ -3,8 +3,6 @@ import { GameActionContext, PersistentDataPayload } from '../types';
 import { requireJoined } from '../connection';
 
 class PersistentDataAction implements GameActionHandler<PersistentDataPayload> {
-  private readonly action = 'persistent_data';
-
   constructor(private readonly context: GameActionContext) {}
 
   duplicateKey(ws: GameSocket, payload: PersistentDataPayload): string | null {
@@ -23,17 +21,6 @@ class PersistentDataAction implements GameActionHandler<PersistentDataPayload> {
       requestId: payload.requestId,
       gameId: payload.gameId,
       data: payload.data
-    });
-  }
-
-  async onSuccess(ws: GameSocket, payload: PersistentDataPayload): Promise<void> {
-    const { userId, roomId } = requireJoined(ws);
-
-    await this.context.roundService.recordActionIfActive(userId, roomId, {
-      action: this.action,
-      requestId: payload.requestId,
-      payload: { gameId: payload.gameId, data: payload.data },
-      result: { status: 'ok' }
     });
   }
 }

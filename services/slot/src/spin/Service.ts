@@ -152,22 +152,7 @@ class SpinService {
       },
       `spin_completed:${request.userId}:${response.roundId}:${response.spinId}`
     );
-    const updatedRound = await this.game.rounds.recordSpin(round, spinNumber);
-    await this.game.rounds.recordActionIfActive(updatedRound.userId, updatedRound.roomId, {
-      action: 'spin',
-      requestId: request.requestId,
-      payload: {
-        gameId: request.gameId,
-        spinId: request.spinId,
-        betAmount: request.betAmount
-      },
-      result: {
-        roundId: response.roundId,
-        symbols: response.symbols,
-        winAmount: response.winAmount,
-        balance: response.balance
-      }
-    });
+    await this.game.rounds.recordSpin(round, spinNumber);
 
     return response;
   }
