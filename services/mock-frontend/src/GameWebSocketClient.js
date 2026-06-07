@@ -26,7 +26,7 @@ class GameWebSocketClient {
   }
 
   handleOpen() {
-    console.log('connected to game-service via websocket');
+    console.log('connected to slot-service via websocket');
     this.resetHeartbeatTimeout();
     this.joinRoom();
     this.startSpinning();

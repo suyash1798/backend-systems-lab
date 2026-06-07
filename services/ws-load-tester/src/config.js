@@ -4,7 +4,7 @@ function numberFromEnv(name, fallback) {
 }
 
 module.exports = {
-  targetUrl: process.env.TARGET_URL || 'ws://game-service:3000',
+  targetUrl: process.env.TARGET_URL || 'ws://slot-service:3000',
   action: process.env.ACTION || 'spin',
   connections: numberFromEnv('CONNECTIONS', 100),
   rooms: numberFromEnv('ROOMS', 1),

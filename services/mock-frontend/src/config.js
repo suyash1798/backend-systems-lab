@@ -4,7 +4,7 @@ function numberFromEnv(name, fallback) {
 }
 
 module.exports = {
-  wsUrl: process.env.GAME_URL || 'ws://game-service:3000',
+  wsUrl: process.env.GAME_URL || 'ws://slot-service:3000',
   userId: process.env.USER_ID || 'user-1',
   roomId: process.env.ROOM_ID || 'room-1',
   heartbeatIntervalMs: numberFromEnv('WS_HEARTBEAT_INTERVAL_MS', 30000),

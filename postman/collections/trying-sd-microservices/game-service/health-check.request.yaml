@@ -1,5 +1,0 @@
-$kind: http-request
-name: Health Check (ELB Heartbeat)
-method: GET
-url: '{{gameServiceHttpUrl}}/'
-order: 1000

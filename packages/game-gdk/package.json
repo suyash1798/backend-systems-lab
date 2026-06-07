@@ -11,6 +11,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "zod": "^4.4.3",
     "ws": "^8.13.0"
   },
   "devDependencies": {

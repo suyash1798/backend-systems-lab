@@ -92,20 +92,22 @@ services:
     environment:
       - USER_SERVICE_URL=http://user-service:6000
       - LOBBY_SERVICE_URL=http://lobby-service:5000
-      - WEBSOCKET_URL=ws://localhost:8080/game/ws
+      - WEBSOCKET_URL=ws://localhost:8080/slot/ws
     depends_on:
       - user-service
       - lobby-service
     restart: unless-stopped
 
-  game-service:
+  slot-service:
     build:
       context: .
-      dockerfile: services/game-service/Dockerfile.debug
+      dockerfile: packages/game-host/Dockerfile.game.debug
+      args:
+        GAME_SERVICE_PATH: services/slot
     command: npm run start:debug
     ports:
-      - "3000:3000"
-      - "9229:9229"
+      - "3010:3000"
+      - "9230:9229"
     environment:
       - WALLET_URL=http://wallet-service:4000
       - REDIS_URL=redis://redis:6379
@@ -149,23 +151,23 @@ services:
       - app-service
       - user-service
       - lobby-service
-      - game-service
+      - slot-service
     restart: unless-stopped
 
   # mock-frontend:
   #   build: ./services/mock-frontend
   #   environment:
-  #     - GAME_URL=ws://game-service:3000
+  #     - GAME_URL=ws://slot-service:3000
   #     - USER_ID=user-1
   #     - ROOM_ID=room-1
   #   depends_on:
-  #     - game-service
+  #     - slot-service
   #   restart: unless-stopped
 
   ws-load-tester:
     build: ./services/ws-load-tester
     environment:
-      - TARGET_URL=ws://game-service:3000
+      - TARGET_URL=ws://slot-service:3000
       - ACTION=ping
       - GAME_ID=slot-1
       - CONNECTIONS=100
@@ -177,7 +179,7 @@ services:
       - REQUEST_TIMEOUT_MS=5000
       - JOIN_ON_OPEN=false
     depends_on:
-      - game-service
+      - slot-service
     profiles:
       - loadtest
 

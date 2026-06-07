@@ -14,7 +14,7 @@ network:
   connect: true
 
 variables:
-  TARGET_URL: ws://game-service:3000
+  TARGET_URL: ws://slot-service:3000
   ACTION: spin
   JOIN_ON_OPEN: true
   CONNECTIONS: 500

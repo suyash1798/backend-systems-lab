@@ -1,0 +1,25 @@
+{
+  "name": "@trying-sd/game-db",
+  "version": "0.1.0",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "db:migrate": "prisma migrate deploy --schema prisma/schema",
+    "db:push": "prisma db push --schema prisma/schema",
+    "db:seed": "prisma db seed --schema prisma/schema",
+    "prisma:generate": "prisma generate --schema prisma/schema"
+  },
+  "prisma": {
+    "schema": "prisma/schema",
+    "seed": "ts-node prisma/seed/index.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,33 @@
+# The manifest for the "slot-service" service.
+name: slot-service
+type: Load Balanced Web Service
+
+http:
+  path: '/'
+
+image:
+  build:
+    dockerfile: packages/game-host/Dockerfile.game
+    context: .
+    args:
+      GAME_SERVICE_PATH: services/slot
+  port: 3000
+
+cpu: 256
+memory: 1024
+platform: linux/x86_64
+count: 2
+exec: true
+network:
+  connect: true
+
+variables:
+  LOG_LEVEL: info
+  WALLET_URL: http://wallet-service:4000
+  REDIS_URL: redis://redis:6379
+  REDIS_CHANNEL: game-events
+  WS_HEARTBEAT_INTERVAL_MS: 30000
+  AWS_REGION: ap-south-1
+  GAME_PLAYER_DATA_TABLE: GamePlayerData
+  JWT_SECRET: dev-secret-change-me
+  KAFKA_TOPIC: game-events

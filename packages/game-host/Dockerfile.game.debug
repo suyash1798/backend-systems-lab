@@ -1,0 +1,35 @@
+FROM node:20-alpine
+
+ARG GAME_SERVICE_PATH
+
+WORKDIR /repo
+RUN apk add --no-cache openssl
+
+COPY packages/game-gdk/package*.json packages/game-gdk/
+RUN npm install --prefix packages/game-gdk
+COPY packages/game-gdk packages/game-gdk
+RUN npm run build --prefix packages/game-gdk
+
+COPY packages/platform/package*.json packages/platform/
+RUN npm install --prefix packages/platform
+COPY packages/platform packages/platform
+RUN npm run build --prefix packages/platform
+
+COPY packages/game-db/package*.json packages/game-db/
+RUN npm install --prefix packages/game-db
+COPY packages/game-db packages/game-db
+RUN npm run prisma:generate --prefix packages/game-db
+
+COPY packages/game-host/package*.json packages/game-host/
+RUN npm install --prefix packages/game-host
+COPY packages/game-host packages/game-host
+RUN npm run build --prefix packages/game-host
+
+COPY ${GAME_SERVICE_PATH}/package*.json ${GAME_SERVICE_PATH}/
+RUN npm install --prefix ${GAME_SERVICE_PATH}
+COPY ${GAME_SERVICE_PATH} ${GAME_SERVICE_PATH}
+
+WORKDIR /repo/${GAME_SERVICE_PATH}
+
+EXPOSE 3000 9229
+CMD ["npm", "run", "start:debug"]

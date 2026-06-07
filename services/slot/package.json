@@ -1,0 +1,33 @@
+{
+  "name": "slot-service",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build:platform": "npm run build --prefix ../../packages/platform",
+    "build:gdk": "npm run build --prefix ../../packages/game-gdk",
+    "build:host": "npm run build --prefix ../../packages/game-host",
+    "build": "npm run build:platform && npm run build:gdk && npm run build:host && tsc",
+    "db:migrate": "npm run db:migrate --prefix ../../packages/game-db",
+    "db:push": "npm run db:push --prefix ../../packages/game-db",
+    "db:seed": "npm run db:seed --prefix ../../packages/game-db",
+    "prisma:generate": "npm run prisma:generate --prefix ../../packages/game-db",
+    "start": "node dist/index.js",
+    "start:debug": "node --inspect=0.0.0.0:9229 -r ts-node/register src/index.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1054.0",
+    "@aws-sdk/lib-dynamodb": "^3.1054.0",
+    "@prisma/client": "^5.22.0",
+    "@trying-sd/game-db": "file:../../packages/game-db",
+    "@trying-sd/game-gdk": "file:../../packages/game-gdk",
+    "@trying-sd/game-host": "file:../../packages/game-host",
+    "@trying-sd/platform": "file:../../packages/platform",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

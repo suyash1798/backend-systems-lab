@@ -20,6 +20,28 @@ export interface RoomEvent {
   [key: string]: unknown;
 }
 
+export interface GameEvent extends RoomEvent {
+  [key: string]: unknown;
+  type: string;
+  userId: string;
+  requestId?: string | null;
+  serverId?: string;
+  timestamp?: string;
+}
+
+export interface PlayerJoinedEvent extends GameEvent {
+  type: 'player_joined';
+}
+
+export interface PlayerActionEvent extends GameEvent {
+  type: 'player_action';
+  action: string;
+}
+
+export type GameEventMessage<TFeatureEvent extends PlayerActionEvent> =
+  | PlayerJoinedEvent
+  | TFeatureEvent;
+
 export interface RequestTrace {
   action: string;
   requestId?: string | null;
