@@ -10,15 +10,15 @@ RUN npm install --prefix packages/game-gdk
 COPY packages/game-gdk packages/game-gdk
 RUN npm run build --prefix packages/game-gdk
 
-COPY packages/platform/package*.json packages/platform/
-RUN npm install --prefix packages/platform
-COPY packages/platform packages/platform
-RUN npm run build --prefix packages/platform
-
 COPY packages/game-db/package*.json packages/game-db/
 RUN npm install --prefix packages/game-db
 COPY packages/game-db packages/game-db
 RUN npm run prisma:generate --prefix packages/game-db
+
+COPY packages/platform/package*.json packages/platform/
+RUN npm install --prefix packages/platform
+COPY packages/platform packages/platform
+RUN npm run build --prefix packages/platform
 
 COPY packages/game-host/package*.json packages/game-host/
 RUN npm install --prefix packages/game-host

@@ -1,0 +1,171 @@
+{
+  "info": {
+    "_postman_id": "trying-sd-core",
+    "name": "Trying-SD Core Flow",
+    "description": "Small manual test collection for user -> lobby -> slot websocket -> analytics.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Gateway Health",
+          "request": {
+            "method": "GET",
+            "url": "{{gatewayUrl}}/"
+          }
+        },
+        {
+          "name": "Analytics Health",
+          "request": {
+            "method": "GET",
+            "url": "{{analyticsUrl}}/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Launch Flow",
+      "item": [
+        {
+          "name": "Launch Game",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.environment.set('playerId', body.playerId);",
+                  "pm.environment.set('accessToken', body.accessToken);",
+                  "pm.environment.set('roomId', body.room && body.room.roomId);",
+                  "pm.environment.set('wsUrl', body.websocketUrl || pm.environment.get('wsUrl'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{deviceId}}\"\n}"
+            },
+            "url": "{{gatewayUrl}}/app/games/{{gameId}}/launch"
+          }
+        },
+        {
+          "name": "Create Device User Direct",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.environment.set('playerId', body.playerId);",
+                  "pm.environment.set('accessToken', body.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{deviceId}}\"\n}"
+            },
+            "url": "{{userUrl}}/devices"
+          }
+        },
+        {
+          "name": "Load Game Direct",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.environment.set('roomId', body.roomId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{lobbyUrl}}/games/{{gameId}}/load"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Slot WebSocket Messages",
+      "item": [
+        {
+          "name": "Connect URL",
+          "request": {
+            "method": "GET",
+            "url": "{{wsUrl}}"
+          },
+          "description": "Open a Postman WebSocket tab with {{wsUrl}}, then send the message examples below."
+        },
+        {
+          "name": "Join Message",
+          "request": {
+            "method": "POST",
+            "url": "{{wsUrl}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"join\",\n  \"requestId\": \"{{joinRequestId}}\",\n  \"roomId\": \"{{roomId}}\",\n  \"token\": \"{{accessToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Spin Message",
+          "request": {
+            "method": "POST",
+            "url": "{{wsUrl}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"spin\",\n  \"requestId\": \"{{spinRequestId}}\",\n  \"gameId\": \"{{gameId}}\",\n  \"spinId\": \"{{spinId}}\",\n  \"betAmount\": {{betAmount}}\n}"
+            }
+          }
+        },
+        {
+          "name": "Duplicate Spin Message",
+          "request": {
+            "method": "POST",
+            "url": "{{wsUrl}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"spin\",\n  \"requestId\": \"{{spinRequestId}}\",\n  \"gameId\": \"{{gameId}}\",\n  \"spinId\": \"{{spinId}}\",\n  \"betAmount\": {{betAmount}}\n}"
+            }
+          },
+          "description": "Send this after Spin Message to verify duplicate response for same roundId + spinId."
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Spin Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{analyticsUrl}}/stats"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,0 @@
-$kind: http-request
-name: Get Spin Stats
-method: GET
-url: '{{analyticsServiceUrl}}/stats'
-order: 2000

@@ -1,0 +1,23 @@
+{
+  "id": "trying-sd-local",
+  "name": "Trying-SD Local",
+  "values": [
+    { "key": "gatewayUrl", "value": "http://localhost:8080", "type": "default", "enabled": true },
+    { "key": "appUrl", "value": "http://localhost:7000", "type": "default", "enabled": true },
+    { "key": "userUrl", "value": "http://localhost:6000", "type": "default", "enabled": true },
+    { "key": "lobbyUrl", "value": "http://localhost:5000", "type": "default", "enabled": true },
+    { "key": "analyticsUrl", "value": "http://localhost:9000", "type": "default", "enabled": true },
+    { "key": "wsUrl", "value": "ws://localhost:8080/slot/ws", "type": "default", "enabled": true },
+    { "key": "gameId", "value": "slot-demo", "type": "default", "enabled": true },
+    { "key": "deviceId", "value": "postman-device-1", "type": "default", "enabled": true },
+    { "key": "playerId", "value": "", "type": "default", "enabled": true },
+    { "key": "accessToken", "value": "", "type": "secret", "enabled": true },
+    { "key": "roomId", "value": "", "type": "default", "enabled": true },
+    { "key": "joinRequestId", "value": "join-1", "type": "default", "enabled": true },
+    { "key": "spinRequestId", "value": "spin-1", "type": "default", "enabled": true },
+    { "key": "spinId", "value": "1", "type": "default", "enabled": true },
+    { "key": "betAmount", "value": "10", "type": "default", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_using": "Postman"
+}

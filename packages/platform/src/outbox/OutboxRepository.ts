@@ -1,10 +1,10 @@
 import { randomUUID } from 'crypto';
-import { PrismaClient } from '@trying-sd/game-db';
+import { Prisma, PrismaClient } from '@trying-sd/game-db';
 import { OutboxEventRecord, OutboxStats, OutboxStore } from './types';
 
 interface OutboxStatusCount {
   status: string;
-  _count: { _all: number };
+  _count: number;
 }
 
 class OutboxRepository implements OutboxStore {
@@ -23,7 +23,7 @@ class OutboxRepository implements OutboxStore {
   }
 
   async claimPending(limit: number): Promise<OutboxEventRecord[]> {
-    return this.prisma.$transaction(async (tx: PrismaClient) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const events = await tx.$queryRaw<OutboxEventRecord[]>`
         select id, event_type as "eventType", payload
         from outbox_events
@@ -65,13 +65,14 @@ class OutboxRepository implements OutboxStore {
   }
 
   async stats(): Promise<OutboxStats> {
-    const rows = await this.prisma.outboxEvent.groupBy({
-      by: ['status'],
-      _count: { _all: true }
-    }) as OutboxStatusCount[];
+    const rows = await this.prisma.$queryRaw<OutboxStatusCount[]>`
+      select status, count(*)::int as "_count"
+      from outbox_events
+      group by status
+    `;
 
-    return rows.reduce((stats: OutboxStats, row) => {
-      stats[row.status] = row._count._all;
+    return rows.reduce((stats: OutboxStats, row: OutboxStatusCount) => {
+      stats[row.status] = row._count;
       return stats;
     }, {
       pending: 0,

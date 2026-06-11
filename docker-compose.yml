@@ -93,9 +93,11 @@ services:
       - USER_SERVICE_URL=http://user-service:6000
       - LOBBY_SERVICE_URL=http://lobby-service:5000
       - WEBSOCKET_URL=ws://localhost:8080/slot/ws
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - user-service
       - lobby-service
+      - redis
     restart: unless-stopped
 
   slot-service:

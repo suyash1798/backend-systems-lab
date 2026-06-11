@@ -1,8 +1,0 @@
-$kind: http-request
-name: List Jackpots
-method: GET
-url: '{{walletServiceUrl}}/jackpots/:game_id'
-order: 6000
-pathVariables:
-  - key: game_id
-    value: '{{gameId}}'
